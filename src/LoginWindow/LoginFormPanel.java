@@ -78,7 +78,7 @@ public class LoginFormPanel extends JPanel {
 //                } catch (IOException ex) {
 //                    throw new RuntimeException(ex);
 //                }
-                context.transition(LoginFormPanel.this, new WaitingRoomList(context, nickname));
+                context.transition(LoginFormPanel.this, new TestPanel(context, nickname));
             }
         });
     }
