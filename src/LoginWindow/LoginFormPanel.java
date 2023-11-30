@@ -24,10 +24,10 @@ public class LoginFormPanel extends JPanel {
 //    private JPanel portPanel = new JPanel(leftSortLayout);
 //    private JPanel btnPanel = new JPanel(leftSortLayout);
 
-    private JFrame context;
+    private RandomDefence context;
 
     private GridBagConstraints gbc;
-    public LoginFormPanel(JFrame context) {
+    public LoginFormPanel(RandomDefence context) {
         this.context = context;
 
         setLayout(new GridLayout(10, 10, 10, 10));
@@ -76,6 +76,7 @@ public class LoginFormPanel extends JPanel {
 //                } catch (IOException ex) {
 //                    throw new RuntimeException(ex);
 //                }
+                context.transition(LoginFormPanel.this, new WaitingRoomList(context, nickname));
             }
         });
     }

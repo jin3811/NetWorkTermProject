@@ -1,5 +1,7 @@
 package LoginWindow;
 
+import util.TransitionDisplayCommand;
+
 import javax.swing.*;
 import java.awt.*;
 
@@ -32,5 +34,17 @@ public class RandomDefence extends JFrame{
         gbc.gridy = 0;
         gbc.insets = new Insets(50, 50, 50, 50); // 내부 여백 설정
         add(loginFormPanel, gbc);
+    }
+
+    public void transition(JPanel removeTarget, JPanel displayTarget, TransitionDisplayCommand displayCommand) {
+        remove(removeTarget);
+        add(displayTarget);
+        revalidate();
+        repaint();
+        if (displayCommand != null) displayCommand.execute();
+    }
+
+    public void transition(JPanel removeTarget, JPanel displayTarget) {
+        transition(removeTarget, displayTarget, null);
     }
 }
