@@ -1,5 +1,6 @@
-package LoginWindow;
+package Main;
 
+import LoginWindow.LoginFormPanel;
 import util.TransitionDisplayCommand;
 
 import javax.swing.*;
