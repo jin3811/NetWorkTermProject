@@ -13,6 +13,8 @@ public class LoginFormPanel extends JPanel {
     private JLabel portLabel = new JLabel("port");
     private JLabel nicknameLabel = new JLabel("nickname");
 
+    private JLabel loginFailLabel = new JLabel();
+
     private final int TFSIZE = 15;
     private JTextField iptfield = new JTextField(TFSIZE);
     private JTextField porttfield = new JTextField(TFSIZE);
@@ -56,6 +58,8 @@ public class LoginFormPanel extends JPanel {
         nicknameLabel.setSize(labelSize);
 
         accessBtn.setSize(buttonSize);
+
+        loginFailLabel.setHorizontalAlignment(SwingConstants.CENTER);
     }
 
     private void setEventListener() {
@@ -66,11 +70,14 @@ public class LoginFormPanel extends JPanel {
                 String port = porttfield.getText();
                 String nickname = nicknametfield.getText();
 
-                if (isIpFormat(ip) || isPortFormat(port) || nickname.isEmpty()) {
-                    System.out.println("ip 또는 port 번호를 제대로 입력해주세요.");
+                if (isIpFormat(ip) && isPortFormat(port) && !nickname.isEmpty()) {
+                    System.out.println(ip + ":" + port + " " + nickname + " 접속시도");
+                    context.transition(LoginFormPanel.this, new TestPanel(context, nickname));
                 }
                 else {
-                    System.out.println(ip + ":" + port + " " + nickname + " 접속시도");
+                    System.out.println("ip 또는 port 번호를 제대로 입력해주세요.");
+                    loginFailLabel.setText("ip 또는 port 번호를 제대로 입력해주세요.");
+                    loginFailLabel.setForeground(Color.red);
                 }
 //                서버에 연결하는 부분
 //                try {
@@ -78,7 +85,6 @@ public class LoginFormPanel extends JPanel {
 //                } catch (IOException ex) {
 //                    throw new RuntimeException(ex);
 //                }
-                context.transition(LoginFormPanel.this, new TestPanel(context, nickname));
             }
         });
     }
@@ -110,5 +116,6 @@ public class LoginFormPanel extends JPanel {
         add(nicknametfield);
 
         add(accessBtn);
+        add(loginFailLabel);
     }
 }
