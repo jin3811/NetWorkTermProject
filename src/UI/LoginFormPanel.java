@@ -4,6 +4,10 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.net.Socket;
 
 public class LoginFormPanel extends JPanel {
 
@@ -21,6 +25,13 @@ public class LoginFormPanel extends JPanel {
 
     private Dimension labelSize = new Dimension(80, 30);
     private Dimension buttonSize = new Dimension(100, 25);
+    
+    private DataOutputStream dos;
+    private DataInputStream dis;
+    
+    private Socket socket; // connectToServer() 에서 초기화됨
+    
+    
 
 //    private JPanel ipPanel = new JPanel(leftSortLayout);
 //    private JPanel portPanel = new JPanel(leftSortLayout);
@@ -69,8 +80,15 @@ public class LoginFormPanel extends JPanel {
                 String nickname = nicknametfield.getText();
 
                 if (isIpFormat(ip) && isPortFormat(port) && !nickname.isEmpty()) {
+                	
                     System.out.println(ip + ":" + port + " " + nickname + " 접속시도");
-                    context.transition(new WaitingRoomPanel(context, nickname));
+                    connectToServer(ip, port, nickname); // 서버 연결 부분: 소켓 초기화
+//                    try {
+//                    	socket = new Socket("localhost", 9999);
+//                    }
+//                    catch (IOException er){
+//                    }
+                    context.transition(new WaitingRoomPanel(context, nickname, socket));
                 }
                 else {
                     System.out.println("ip 또는 port 번호를 제대로 입력해주세요.");
@@ -117,5 +135,20 @@ public class LoginFormPanel extends JPanel {
 
         add(accessBtn);
         add(loginFailLabel);
+    }
+    private void connectToServer(String ip, String port, String nickname) {
+        try {
+        	// 받아온 ip, port로 소켓 연결
+            socket = new Socket("localhost", Integer.parseInt(port));
+            
+            // 스트림 초기화
+            dos = new DataOutputStream(socket.getOutputStream());
+            dis = new DataInputStream(socket.getInputStream());
+            
+            dos.writeUTF(nickname); // 서버에 nickname 전송
+            System.out.println("nickname: " + nickname);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
