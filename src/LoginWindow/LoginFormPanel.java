@@ -1,7 +1,7 @@
 package LoginWindow;
 
 import Main.RandomDefence;
-
+import WatingRoomWindow.WaitingRoomPanel;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -78,7 +78,7 @@ public class LoginFormPanel extends JPanel {
 //                } catch (IOException ex) {
 //                    throw new RuntimeException(ex);
 //                }
-                context.transition(LoginFormPanel.this, new WaitingRoomList(context, nickname));
+                context.transition(LoginFormPanel.this, new WaitingRoomPanel(context ,nickname));
             }
         });
     }
