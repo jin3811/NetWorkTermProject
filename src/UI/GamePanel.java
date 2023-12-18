@@ -6,7 +6,10 @@ import javax.swing.*;
 public class GamePanel extends JPanel {
     private RandomDefence context;
 
-    public GamePanel(RandomDefence context) {
+    public GamePanel(RandomDefence context, String nickname, Socket socket) {
         this.context = context;
+        
+        context.setSize(1000, 800);
+        
     }
 }

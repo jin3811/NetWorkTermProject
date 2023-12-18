@@ -49,14 +49,7 @@ public class WaitingRoomPanel extends JPanel {
 
 			dis = new DataInputStream(socket.getInputStream());
 			dos = new DataOutputStream(socket.getOutputStream());
-<<<<<<< HEAD
-			
-			objOS = new ObjectOutputStream(socket.getOutputStream());
-			objIs = new ObjectInputStream(socket.getInputStream());
-			
-=======
 
->>>>>>> main
 			if (this.socket != null)
 				System.out.println("소켓 가져오기 완료"); // 정상 확인
 		} catch (Exception e) {
