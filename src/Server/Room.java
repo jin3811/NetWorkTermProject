@@ -2,8 +2,19 @@ package Server;
 
 import java.io.Serializable;
 import java.util.Set;
+import java.util.Vector;
 
 public class Room implements Serializable {
     private String name;
-    private Set<UserService> users;
+//    private Vector<UserService> users = new Vector<>();
+
+    public Room(String name, int managerId) {
+        this.name = name;
+//        users.add(manager);
+    }
+
+    public void participate(UserService user) {
+
+
+    }
 }

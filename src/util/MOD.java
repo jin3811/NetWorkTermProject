@@ -28,6 +28,10 @@ public class MOD implements Serializable {
         this.mode = mode;
     }
 
+    public String getAdditionalData() {
+        return additionalData;
+    }
+
     @Override
     public String toString() {
         return "MOD{mod="+mode.toString()+"}";
