@@ -1,6 +1,7 @@
 package Main;
 
 import LoginWindow.LoginFormPanel;
+import WatingRoomWindow.WaitingRoomPanel;
 import util.TransitionDisplayCommand;
 
 import javax.swing.*;
@@ -39,6 +40,7 @@ public class RandomDefence extends JFrame{
 
     public void transition(JPanel removeTarget, JPanel displayTarget, TransitionDisplayCommand displayCommand) {
         remove(removeTarget);
+//    	removeAll();
         add(displayTarget);
         revalidate();
         repaint();
