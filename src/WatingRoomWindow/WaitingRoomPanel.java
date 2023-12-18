@@ -19,8 +19,8 @@ public class WaitingRoomPanel extends JPanel {
     	setLayout(null);
     	
     	JPanel panelTop = new JPanel();
-    	panelTop.setBounds(0, 0, 825, 70);
-    	add(panelTop);
+    	panelTop.setBounds(0, 0, getWidth(), 70);
+    	this.add(panelTop);
     	panelTop.setLayout(null);
     	
     	JLabel waitRoomLabel = new JLabel("대기방");
@@ -42,7 +42,7 @@ public class WaitingRoomPanel extends JPanel {
         innerPanel.setLayout(new BoxLayout(innerPanel, BoxLayout.Y_AXIS));
         JScrollPane scrollPane = new JScrollPane(innerPanel);
         scrollPane.setBounds(0, 70, 825, 524);
-        add(scrollPane);
+        this.add(scrollPane);
     	
         
     }
