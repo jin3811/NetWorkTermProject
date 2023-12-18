@@ -31,9 +31,9 @@ public class UserService extends Thread{
             if(dis != null && dos != null)
                 System.out.println("UserService dis, dos 초기화 완료");
 
-            String line = dis.readUTF(); //
-            String[] msg = line.split(""); //
-            name = msg[1].trim(); // 유저 이름 읽어옴
+//            String line = dis.readUTF(); //
+//            String[] msg = line.split(""); //
+//            name = msg[1].trim(); // 유저 이름 읽어옴
             System.out.println(name+" 입장");
         }catch (Exception e) {
             // TODO: handle exception

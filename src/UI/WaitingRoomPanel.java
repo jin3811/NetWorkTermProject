@@ -7,6 +7,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.IOException;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
@@ -21,6 +22,8 @@ public class WaitingRoomPanel extends JPanel {
 	private JList<String> roomList;
 	private Map<String, String> gameRoomUsers; // 대기방별 유저
 	private String selectedGameRoom;
+	
+	private boolean isReady = false;
 
 	public WaitingRoomPanel(RandomDefence context, String nickname, Socket socket) {
 
@@ -58,17 +61,30 @@ public class WaitingRoomPanel extends JPanel {
 		createRoomButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				// 방제목 입력
+				String roomName = JOptionPane.showInputDialog(WaitingRoomPanel.this, "방 제목을 입력하세요: ", "방 만들기", JOptionPane.PLAIN_MESSAGE);
+				if(roomName!=null & !roomName.trim().isEmpty()) {
+					roomName = roomName.trim();
+					// 모델에 방제목 추가
+					model.addElement(roomName);
+					// 해당 방이 자동으로 JList에서 선택되고 화면에 보이도록 스크롤 하는 기능
+					roomList.setSelectedValue(roomName, true);
+					
+					// 서버에 새 방 생성 요청 보냄
+					sendMessageToServer("CREATE_ROOM " + roomName);
+					
+				}
 				// 일반적으로 여기서 서버에 새 방을 생성해달라는 요청을 보냅니다.
 		        // 현재 예시에서는 시연을 위해 로컬 모델에 새 방을 추가하는 코드를 사용합니다.
-
+				
 		        // 새 방 이름 생성 예: "Game Room " + 다음 숫자
-		        String newRoomName = "Game Room " + (model.getSize() + 1);
+//		        String newRoomName = "Game Room " + (model.getSize() + 1);
 
 		        // 모델에 새 방 추가
-		        model.addElement(newRoomName);
+//		        model.addElement(newRoomName);
 
 		        // 선택 사항: 목록에서 새 방을 선택
-		        roomList.setSelectedValue(newRoomName, true);
+//		        roomList.setSelectedValue(newRoomName, true);
 
 		        // 서버에 연결되어 있다면 여기서 서버에 방 생성 요청을 보냅니다.
 		        // 서버로부터 방 생성 확인을 받으면, 서버는 새로운 방 목록을 모든 클라이언트에게 업데이트합니다.
@@ -93,7 +109,8 @@ public class WaitingRoomPanel extends JPanel {
 //                    initializeChatFrame(); // 채팅화면 초기화하는 함수 호출
 //                	initializeGameFrame(); // 게임 화면 초기화하는 메서드 호출
 //                    chatRoomFrame.setVisible(false);
-					// 화면 넘어가는 로칙 추가해야 함.
+					
+					
 				} else {
 					JOptionPane.showMessageDialog(context, "게임룸을 선택해주세요.");
 				}
@@ -112,9 +129,9 @@ public class WaitingRoomPanel extends JPanel {
 	private void fetchGameRoomUsers() {
 		// 서버로부터 채팅룸 사용자 정보를 가져오는 로직을 가정.
 		// 실제 애플리케이션에서는 서버와의 통신을 통해 이 정보를 얻어야 함
-		gameRoomUsers.put("Chat Room 1", "User1, User2");
-		gameRoomUsers.put("Chat Room 2", "User3, User4");
-		gameRoomUsers.put("Chat Room 3", "User5, User6");
+		gameRoomUsers.put("Game Room 1", "User1, User2");
+		gameRoomUsers.put("Game Room 2", "User3, User4");
+		gameRoomUsers.put("Game Room 3", "User5, User6");
 
 		// 채팅룸 목록 ChatRoomList(JList)의 모델을 가져옴
 		// 이 모델은 채팅룸 목록의 데이터를 관리함
@@ -131,7 +148,20 @@ public class WaitingRoomPanel extends JPanel {
 			model.set(i, room + " (" + users + ")");
 		}
 	}
-
+	// 서버에 메시지를 보내는 메소드
+	private void sendMessageToServer(String message) {
+	    try {
+	        if (dos != null) {
+	            dos.writeUTF(message);
+	            dos.flush();
+	        }
+	    } catch (IOException ex) {
+	        ex.printStackTrace();
+	        JOptionPane.showMessageDialog(WaitingRoomPanel.this,
+	                "서버에 메시지를 보내는데 실패했습니다: " + ex.getMessage(),
+	                "통신 오류", JOptionPane.ERROR_MESSAGE);
+	    }
+	}
 //    private void addWaitingRoom(String roomTitle, JPanel panel) {
 //        JButton waitingRoomButton = new JButton(roomTitle);
 //        waitingRoomButton.addActionListener(new ActionListener() {
