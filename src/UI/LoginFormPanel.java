@@ -83,11 +83,6 @@ public class LoginFormPanel extends JPanel {
                 	
                     System.out.println(ip + ":" + port + " " + nickname + " 접속시도");
                     connectToServer(ip, port, nickname); // 서버 연결 부분: 소켓 초기화
-//                    try {
-//                    	socket = new Socket("localhost", 9999);
-//                    }
-//                    catch (IOException er){
-//                    }
                     context.transition(new WaitingRoomPanel(context, nickname, socket));
                 }
                 else {
@@ -95,13 +90,6 @@ public class LoginFormPanel extends JPanel {
                     loginFailLabel.setText("ip 또는 port 번호를 제대로 입력해주세요.");
                     loginFailLabel.setForeground(Color.red);
                 }
-//                서버에 연결하는 부분
-//                try {
-//                    Socket socket = new Socket(ip, port);
-//                } catch (IOException ex) {
-//                    throw new RuntimeException(ex);
-//                }
-//                context.transition(new WaitingRoomPanel(context ,nickname));
             }
         });
     }
@@ -139,13 +127,13 @@ public class LoginFormPanel extends JPanel {
     private void connectToServer(String ip, String port, String nickname) {
         try {
         	// 받아온 ip, port로 소켓 연결
-            socket = new Socket("localhost", Integer.parseInt(port));
+            socket = new Socket(ip, Integer.parseInt(port));
             
             // 스트림 초기화
             dos = new DataOutputStream(socket.getOutputStream());
             dis = new DataInputStream(socket.getInputStream());
             
-            dos.writeUTF(nickname); // 서버에 nickname 전송
+//            dos.writeUTF(nickname); // 서버에 nickname 전송
             System.out.println("nickname: " + nickname);
         } catch (Exception e) {
             e.printStackTrace();
