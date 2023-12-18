@@ -31,10 +31,10 @@ public class UserService extends Thread implements Serializable{
         this.id = id;
 
         try {
-            is = clientSocket.getInputStream();
-            objIs = new ObjectInputStream(is);
             os = clientSocket.getOutputStream();
             objOS = new ObjectOutputStream(os);
+            is = clientSocket.getInputStream();
+            objIs = new ObjectInputStream(is);
             if(objIs != null && objOS != null)
                 System.out.println("UserService dis, dos 초기화 완료");
 
