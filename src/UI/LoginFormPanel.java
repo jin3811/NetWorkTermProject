@@ -128,11 +128,11 @@ public class LoginFormPanel extends JPanel {
         try {
         	// 받아온 ip, port로 소켓 연결
             socket = new Socket(ip, Integer.parseInt(port));
-            
+
             // 스트림 초기화
-            dos = new DataOutputStream(socket.getOutputStream());
-            dis = new DataInputStream(socket.getInputStream());
-            
+//            dos = new DataOutputStream(socket.getOutputStream());
+//            dis = new DataInputStream(socket.getInputStream());
+
 //            dos.writeUTF(nickname); // 서버에 nickname 전송
             System.out.println("nickname: " + nickname);
         } catch (Exception e) {

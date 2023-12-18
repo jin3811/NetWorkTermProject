@@ -43,12 +43,12 @@ public class WaitingRoomPanel extends JPanel {
 		try {
 			this.socket = socket; // 로그인 패널에서 소켓 가져옴
 			// 스트림 초기화
+			objOS = new ObjectOutputStream(socket.getOutputStream());
+			objIs = new ObjectInputStream(socket.getInputStream());
+
 			dis = new DataInputStream(socket.getInputStream());
 			dos = new DataOutputStream(socket.getOutputStream());
-			
-			objIs = new ObjectInputStream(socket.getInputStream());
-			objOS = new ObjectOutputStream(socket.getOutputStream());
-			
+
 			if (this.socket != null)
 				System.out.println("소켓 가져오기 완료"); // 정상 확인
 		} catch (Exception e) {
@@ -135,6 +135,10 @@ public class WaitingRoomPanel extends JPanel {
 	    add(topPanel, BorderLayout.NORTH);
 		add(new JScrollPane(roomList), BorderLayout.CENTER);
 		add(selectButton, BorderLayout.SOUTH);
+
+		Thread updateRoomListThread = new UpdateRoomList();
+		updateRoomListThread.start();
+
 		setVisible(true);
 	}
 
