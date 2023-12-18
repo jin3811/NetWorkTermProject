@@ -189,7 +189,7 @@ public class Server {
                 ObjectOutputStream objOs = user.getObjOutputStream();
                 objOs.writeObject(rooms);
                 objOs.flush();
-
+                System.out.println("user : " + user.getName() + " 에게 전송함");
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
