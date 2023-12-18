@@ -185,7 +185,7 @@ public class Server {
         private DataInputStream dis;
         private DataOutputStream dos;
         
-        private String name;
+        private String name; // 유저 이름
         private Socket clientSocket;
 //        private Vector<UserService> allUsers;
         
@@ -202,7 +202,7 @@ public class Server {
             
             String line = dis.readUTF(); // 
             String[] msg = line.split(""); // 
-            name = msg[1].trim(); // 유저 이름 읽어옴
+            name = msg[1].trim(); // 유저 이름 저장
             System.out.println(name+" 입장");
          }catch (Exception e) {
             // TODO: handle exception

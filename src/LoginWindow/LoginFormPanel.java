@@ -6,6 +6,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.net.Socket;
 
 public class LoginFormPanel extends JPanel {
 
@@ -23,6 +26,9 @@ public class LoginFormPanel extends JPanel {
 
     private Dimension labelSize = new Dimension(80, 30);
     private Dimension buttonSize = new Dimension(100, 25);
+    
+    private DataOutputStream dos;
+    private DataInputStream dis;
 
 //    private JPanel ipPanel = new JPanel(leftSortLayout);
 //    private JPanel portPanel = new JPanel(leftSortLayout);
@@ -71,7 +77,9 @@ public class LoginFormPanel extends JPanel {
                 String nickname = nicknametfield.getText();
 
                 if (isIpFormat(ip) && isPortFormat(port) && !nickname.isEmpty()) {
+                	
                     System.out.println(ip + ":" + port + " " + nickname + " 접속시도");
+                    connectToServer(ip, port, nickname); // 소켓 초기화
                     context.transition(new WaitingRoomPanel(context, nickname));
                 }
                 else {
@@ -118,5 +126,21 @@ public class LoginFormPanel extends JPanel {
 
         add(accessBtn);
         add(loginFailLabel);
+    }
+    private void connectToServer(String ip, String port, String nickname) {
+        try {
+        	// 서버 연결
+            Socket socket = new Socket("localhost", 9999);
+            
+            // 스트림 초기화
+            dos = new DataOutputStream(socket.getOutputStream());
+            dis = new DataInputStream(socket.getInputStream());
+            
+            String info = ip + " " + port + " " + nickname;
+            dos.writeUTF(info); // 서버에 info 전송
+            System.out.println("info: " + info);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
