@@ -1,4 +1,4 @@
-package LoginWindow;
+package UI;
 
 import javax.swing.*;
 
