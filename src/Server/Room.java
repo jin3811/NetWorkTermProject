@@ -12,7 +12,9 @@ public class Room implements Serializable {
         this.name = name;
 //        users.add(manager);
     }
-
+    public String getRoomName() {
+    	return name;
+    }
     public void participate(UserService user) {
 
 

@@ -180,6 +180,7 @@ public class Server {
         notifyRoomChange();
 
         System.out.println(name + " room 만들기 성공");
+        System.out.println("room개수: "+rooms.size());
     }
 
     private void notifyRoomChange() {
