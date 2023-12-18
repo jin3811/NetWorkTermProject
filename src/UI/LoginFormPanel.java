@@ -30,12 +30,6 @@ public class LoginFormPanel extends JPanel {
     private DataInputStream dis;
     
     private Socket socket; // connectToServer() 에서 초기화됨
-    
-    
-
-//    private JPanel ipPanel = new JPanel(leftSortLayout);
-//    private JPanel portPanel = new JPanel(leftSortLayout);
-//    private JPanel btnPanel = new JPanel(leftSortLayout);
 
     private RandomDefence context;
 
@@ -80,7 +74,6 @@ public class LoginFormPanel extends JPanel {
                 String nickname = nicknametfield.getText();
 
                 if (isIpFormat(ip) && isPortFormat(port) && !nickname.isEmpty()) {
-                	
                     System.out.println(ip + ":" + port + " " + nickname + " 접속시도");
                     connectToServer(ip, port, nickname); // 서버 연결 부분: 소켓 초기화
                     context.transition(new WaitingRoomPanel(context, nickname, socket));
@@ -128,13 +121,6 @@ public class LoginFormPanel extends JPanel {
         try {
         	// 받아온 ip, port로 소켓 연결
             socket = new Socket(ip, Integer.parseInt(port));
-
-            // 스트림 초기화
-//            dos = new DataOutputStream(socket.getOutputStream());
-//            dis = new DataInputStream(socket.getInputStream());
-
-//            dos.writeUTF(nickname); // 서버에 nickname 전송
-            System.out.println("nickname: " + nickname);
         } catch (Exception e) {
             e.printStackTrace();
         }

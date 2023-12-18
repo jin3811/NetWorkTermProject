@@ -16,6 +16,7 @@ import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import java.net.*;
+@Deprecated
 public class RoomPanel extends JPanel {
 	private String nickname;
 	private Socket socket;

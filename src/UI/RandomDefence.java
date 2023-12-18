@@ -13,14 +13,10 @@ public class RandomDefence extends JFrame{
     public RandomDefence(String title) {
         super(title);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
-//        setSize(1000, 800);
 
         initWindow();
 
         setVisible(true);
-
-//        loginFormPanel.setFocusable(true);
-//        loginFormPanel.requestFocus();
     }
 
     private void initWindow() {
