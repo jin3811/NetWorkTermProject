@@ -72,7 +72,7 @@ public class LoginFormPanel extends JPanel {
 
                 if (isIpFormat(ip) && isPortFormat(port) && !nickname.isEmpty()) {
                     System.out.println(ip + ":" + port + " " + nickname + " 접속시도");
-                    context.transition(LoginFormPanel.this, new TestPanel(context, nickname));
+                    context.transition(new WaitingRoomPanel(context, nickname));
                 }
                 else {
                     System.out.println("ip 또는 port 번호를 제대로 입력해주세요.");
@@ -85,7 +85,7 @@ public class LoginFormPanel extends JPanel {
 //                } catch (IOException ex) {
 //                    throw new RuntimeException(ex);
 //                }
-                context.transition(LoginFormPanel.this, new WaitingRoomPanel(context ,nickname));
+//                context.transition(new WaitingRoomPanel(context ,nickname));
             }
         });
     }

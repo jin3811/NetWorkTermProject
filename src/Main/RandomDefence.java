@@ -10,9 +10,6 @@ import java.awt.*;
 public class RandomDefence extends JFrame{
 
     private LoginFormPanel loginFormPanel;
-    private ImageIcon icon = new ImageIcon("background.jpg");
-    private Image img = icon.getImage();
-
 
     public RandomDefence(String title) {
         super(title);
@@ -38,16 +35,14 @@ public class RandomDefence extends JFrame{
         add(loginFormPanel, gbc);
     }
 
-    public void transition(JPanel removeTarget, JPanel displayTarget, TransitionDisplayCommand displayCommand) {
-        remove(removeTarget);
-//    	removeAll();
-        add(displayTarget);
-        revalidate();
-        repaint();
+    public void transition(JPanel displayTarget, TransitionDisplayCommand displayCommand) {
+        getContentPane().removeAll();
+        getContentPane().add(displayTarget);
+        setContentPane(displayTarget);
         if (displayCommand != null) displayCommand.execute();
     }
 
-    public void transition(JPanel removeTarget, JPanel displayTarget) {
-        transition(removeTarget, displayTarget, null);
+    public void transition(JPanel displayTarget) {
+        transition(displayTarget, null);
     }
 }
