@@ -5,12 +5,19 @@ import java.util.Objects;
 
 public class MOD implements Serializable {
     private MODE mode;
+    private String additionalData;
+
+    public MOD(MODE mode, String additionalData) {
+        this.mode = mode;
+        this.additionalData = additionalData;
+    }
 
     public MOD(MODE mode) {
-        this.mode = mode;
+        this(mode, null);
     }
+
     public MOD() {
-        this(null);
+        this(null, null);
     }
 
     public MODE getMode() {
