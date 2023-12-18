@@ -1,7 +1,6 @@
-package Main;
+package UI;
 
-import LoginWindow.LoginFormPanel;
-import WatingRoomWindow.WaitingRoomPanel;
+import UI.LoginFormPanel;
 import util.TransitionDisplayCommand;
 
 import javax.swing.*;

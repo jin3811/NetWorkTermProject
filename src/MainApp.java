@@ -1,4 +1,4 @@
-import Main.RandomDefence;
+import UI.RandomDefence;
 
 public class MainApp {
     public static void main(String[] args) {
