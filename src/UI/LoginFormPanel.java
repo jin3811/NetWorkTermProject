@@ -1,7 +1,5 @@
-package LoginWindow;
+package UI;
 
-import Main.RandomDefence;
-import WatingRoomWindow.WaitingRoomPanel;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;

@@ -1,9 +1,6 @@
-package WatingRoomWindow;
+package UI;
 
-import javax.naming.Context;
 import javax.swing.*;
-
-import Main.RandomDefence;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
