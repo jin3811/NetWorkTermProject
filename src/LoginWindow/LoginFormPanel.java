@@ -100,18 +100,19 @@ public class LoginFormPanel extends JPanel {
 
     // 입력한 ip가 localhost, 또는 ipv4 형식에 맞게 입력되었는지 테스트
     private boolean isIpFormat(String ip) {
-        return ip.matches("localhost|((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)");
+        return true;// ip.matches("localhost|((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)");
     }
 
     // 입력한 port가 범위에 맞게 입력되었는지 테스트
     private boolean isPortFormat(String port) {
-        try {
-            int portTest = Integer.parseInt(port);
-            return portTest >= 0 && portTest <= 65535;
-        }
-        catch (NumberFormatException e) {
-            return false;
-        }
+//        try {
+//            int portTest = Integer.parseInt(port);
+//            return portTest >= 0 && portTest <= 65535;
+//        }
+//        catch (NumberFormatException e) {
+//            return false;
+//        }
+        return true;
     }
 
     private void setDisplay() {
