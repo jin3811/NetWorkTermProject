@@ -32,12 +32,13 @@ public class WaitingRoomPanel extends JPanel {
 	private ObjectInputStream objIs;
     private ObjectOutputStream objOS;
     
-    DefaultListModel<String> model = new DefaultListModel<>();
+    DefaultListModel<String> model;
 	private boolean isReady = false;
 
 	public WaitingRoomPanel(RandomDefence context, String nickname, Socket socket) {
 
 		this.nickname = nickname;
+		model = new DefaultListModel<>();
 		gameRoomUsers = new HashMap<>(); //
 
 		try {
@@ -46,8 +47,8 @@ public class WaitingRoomPanel extends JPanel {
 			dis = new DataInputStream(socket.getInputStream());
 			dos = new DataOutputStream(socket.getOutputStream());
 			
-			objIs = new ObjectInputStream(socket.getInputStream());
 			objOS = new ObjectOutputStream(socket.getOutputStream());
+			objIs = new ObjectInputStream(socket.getInputStream());
 			
 			if (this.socket != null)
 				System.out.println("소켓 가져오기 완료"); // 정상 확인
@@ -135,6 +136,8 @@ public class WaitingRoomPanel extends JPanel {
 	    add(topPanel, BorderLayout.NORTH);
 		add(new JScrollPane(roomList), BorderLayout.CENTER);
 		add(selectButton, BorderLayout.SOUTH);
+		Thread updateRoomList = new Thread();
+		updateRoomList.start();
 		setVisible(true);
 	}
 
@@ -177,15 +180,36 @@ public class WaitingRoomPanel extends JPanel {
 	}
 	private class UpdateRoomList extends Thread{
 		private Vector<Room> rooms;
+		String roomName;
 		@Override
 		public void run() {
 			while(true) {
+//				try {
+//					rooms = (Vector<Room>)objIs.readObject();
+//					System.out.println("room 개수: " + rooms.size());
+//					SwingUtilities.invokeLater(new Runnable() {
+//						
+//						@Override
+//						public void run() {
+//							model.clear();
+//							for(Room room : rooms) {
+//								roomName = room.getRoomName();
+//								model.addElement(roomName); // 모델에 방제 추가
+//							}
+//							if(!rooms.isEmpty()) {
+//								roomList.setSelectedValue(roomName, true);
+//							}
+//						}
+//					});
+//				}catch (Exception e) {
+//					// TODO: handle exception
+//				}
 				try {
 					rooms = (Vector<Room>)objIs.readObject();
 					System.out.println("room 개수: " + rooms.size());
 					for(Room room : rooms) {
 						String roomName = room.getRoomName();
-				
+
 						model.addElement(roomName); // 모델에 방제 추가
 						roomList.setSelectedValue(roomName, true);
 					}
