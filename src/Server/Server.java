@@ -193,6 +193,7 @@ public class Server {
          this.clientSocket = clientSocket;
 //         this.allUsers = allUsers;
          try {
+        	// 스트림 초기화
             is = clientSocket.getInputStream();
             dis = new DataInputStream(is);
             os = clientSocket.getOutputStream();
@@ -200,10 +201,11 @@ public class Server {
             if(dis != null && dos != null)
             	System.out.println("UserService dis, dos 초기화 완료");
             
-            String line = dis.readUTF(); // 
-            String[] msg = line.split(""); // 
-            name = msg[1].trim(); // 유저 이름 저장
-            System.out.println(name+" 입장");
+//            String info = dis.readUTF(); // info 받아옴
+//            String[] msg = info.split(" "); // 
+//            name = msg[1].trim(); // 유저 이름 저장
+            name = dis.readUTF(); // name 읽어 오기
+            System.out.println("Server: "  +name+" 입장");
          }catch (Exception e) {
             // TODO: handle exception
             e.printStackTrace();

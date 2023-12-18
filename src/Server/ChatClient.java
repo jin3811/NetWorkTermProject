@@ -127,7 +127,7 @@ public class ChatClient {
         gameFrame.setLocationRelativeTo(null); // 창을 화면 가운데에 위치시킵니다.
         gameFrame.setVisible(true);
         
-        new Thread(new GameServerListener()).start();
+//        new Thread(new GameServerListener()).start();
     }
     private void initializeChatFrame() {
         chatFrame = new JFrame(selectedChatRoom);
@@ -209,27 +209,27 @@ public class ChatClient {
         new ChatClient();
     }
     
-    private class GameServerListener implements Runnable {
-        @Override
-        public void run() {
-            try {
-                while (true) {
-                    // 서버로부터 메시지를 받아 처리합니다.
-                    String message = dis.readUTF();
-                    // 메시지에 따라 게임 패널을 업데이트합니다.
-                    // 예: gamePanel.updateGameState(message);
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            } finally {
-                try {
-                    if (dis != null) dis.close();
-                    if (socket != null) socket.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
+//    private class GameServerListener implements Runnable {
+//        @Override
+//        public void run() {
+//            try {
+//                while (true) {
+//                    // 서버로부터 메시지를 받아 처리합니다.
+//                    String message = dis.readUTF();
+//                    // 메시지에 따라 게임 패널을 업데이트합니다.
+//                    // 예: gamePanel.updateGameState(message);
+//                }
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            } finally {
+//                try {
+//                    if (dis != null) dis.close();
+//                    if (socket != null) socket.close();
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//        }
 }
 
 //몬스터를 나타내는 클래스입니다.

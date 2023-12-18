@@ -5,45 +5,132 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.net.Socket;
+import java.util.HashMap;
+import java.util.Map;
 
 public class WaitingRoomPanel extends JPanel {
+
 	private String nickname;
-    public WaitingRoomPanel(RandomDefence context ,String nickname) {
-    	this.nickname = nickname;
-    	context.setSize(1000,800);
+	private Socket socket;
 
-    	setLayout(new BorderLayout());
+	private DataOutputStream dos;
+	private DataInputStream dis;
+	private JList<String> roomList;
+	private Map<String, String> gameRoomUsers; // 대기방별 유저
+	private String selectedGameRoom;
 
-    	JPanel panelTop = new JPanel();
-		panelTop.setSize(getWidth(), 100);
-    	panelTop.setLayout(new BorderLayout());
+	public WaitingRoomPanel(RandomDefence context, String nickname, Socket socket) {
 
-		JLabel waitRoomLabel = new JLabel("대기방");
-		waitRoomLabel.setHorizontalAlignment(SwingConstants.CENTER);
-//    	waitRoomLabel.setBounds(0, 0, 114, 70);
-		panelTop.add(waitRoomLabel, BorderLayout.WEST);
+		this.nickname = nickname;
+		gameRoomUsers = new HashMap<>(); //
 
-		JButton createRoomBtn = new JButton("방만들기");
-		createRoomBtn.addActionListener(new ActionListener() {
-    		public void actionPerformed(ActionEvent e) {
-    		}
-    	});
+		try {
+			this.socket = socket; // 로그인 패널에서 소켓 가져옴
+			// 스트림 초기화
+			dis = new DataInputStream(socket.getInputStream());
+			dos = new DataOutputStream(socket.getOutputStream());
+			if (this.socket != null)
+				System.out.println("소켓 가져오기 완료"); // 정상 확인
+		} catch (Exception e) {
 
-//    	createRoomBtn.setBounds(711, 0, 114, 70);
-		createRoomBtn.setSize(114, 70);
-		panelTop.add(createRoomBtn, BorderLayout.EAST);
+		}
 
-		add(panelTop, BorderLayout.NORTH);
+		context.setSize(1000, 800);
 
-//		 JPanel을 생성하고 추가
-		JPanel innerPanel = new JPanel();
-		innerPanel.setLayout(new BoxLayout(innerPanel, BoxLayout.Y_AXIS));
-        JScrollPane scrollPane = new JScrollPane(innerPanel);
-        scrollPane.setSize(825, 524);
-		add(scrollPane, BorderLayout.CENTER);
-    }
+		setLayout(new BorderLayout());
 
+		// 채팅룸 목록 관리
+		// model.addElement로 표시될 채팅룸을 설정하고 있음.
+		// 이는 이미 채팅룸이 정해져있다고 가정한것.
+		// -> 직접 생성하도록 수정될 필요 있음.
+		DefaultListModel<String> model = new DefaultListModel<>();
+//		model.addElement("Chat Room 1");
+//		model.addElement("Chat Room 2");
+//		model.addElement("Chat Room 3");
+		// JList<String>객체 roomList에 해당 model 설정
+		roomList = new JList<>(model);
+		
+		JPanel topPanel = new JPanel(new BorderLayout());
+		JButton createRoomButton = new JButton("방 만들기");
+		createRoomButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// 일반적으로 여기서 서버에 새 방을 생성해달라는 요청을 보냅니다.
+		        // 현재 예시에서는 시연을 위해 로컬 모델에 새 방을 추가하는 코드를 사용합니다.
+
+		        // 새 방 이름 생성 예: "Game Room " + 다음 숫자
+		        String newRoomName = "Game Room " + (model.getSize() + 1);
+
+		        // 모델에 새 방 추가
+		        model.addElement(newRoomName);
+
+		        // 선택 사항: 목록에서 새 방을 선택
+		        roomList.setSelectedValue(newRoomName, true);
+
+		        // 서버에 연결되어 있다면 여기서 서버에 방 생성 요청을 보냅니다.
+		        // 서버로부터 방 생성 확인을 받으면, 서버는 새로운 방 목록을 모든 클라이언트에게 업데이트합니다.
+		        // 서버 요청을 위한 장소 예약:
+		        // sendMessageToServer("CREATE_ROOM " + newRoomName);
+				
+			}
+		});
+		
+
+	 
+		// 게임룸 사용자 정보 가져오기
+		fetchGameRoomUsers();
+
+		JButton selectButton = new JButton("게임방 입장");
+		selectButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// 현재 선택된 채팅룸 가져오기(String)
+				selectedGameRoom = roomList.getSelectedValue();
+				if (selectedGameRoom != null) {
+//                    initializeChatFrame(); // 채팅화면 초기화하는 함수 호출
+//                	initializeGameFrame(); // 게임 화면 초기화하는 메서드 호출
+//                    chatRoomFrame.setVisible(false);
+					// 화면 넘어가는 로칙 추가해야 함.
+				} else {
+					JOptionPane.showMessageDialog(context, "게임룸을 선택해주세요.");
+				}
+			}
+		});
+		
+		// topPanel에 방만들기 버튼 추가 
+	    topPanel.add(createRoomButton, BorderLayout.EAST); // Adds the button to the right side
+	    add(topPanel, BorderLayout.NORTH);
+		add(new JScrollPane(roomList), BorderLayout.CENTER);
+		add(selectButton, BorderLayout.SOUTH);
+		setVisible(true);
+	}
+
+	// 각 채팅룸에 대한 사용자 목록을 가상으로 생성하는중 -> 수정필요
+	private void fetchGameRoomUsers() {
+		// 서버로부터 채팅룸 사용자 정보를 가져오는 로직을 가정.
+		// 실제 애플리케이션에서는 서버와의 통신을 통해 이 정보를 얻어야 함
+		gameRoomUsers.put("Chat Room 1", "User1, User2");
+		gameRoomUsers.put("Chat Room 2", "User3, User4");
+		gameRoomUsers.put("Chat Room 3", "User5, User6");
+
+		// 채팅룸 목록 ChatRoomList(JList)의 모델을 가져옴
+		// 이 모델은 채팅룸 목록의 데이터를 관리함
+		// 각 채팅룸에 해당 채팅룸의 사용자 목록 표시
+		DefaultListModel<String> model = (DefaultListModel<String>) roomList.getModel();
+		// 모델의 모든 채팅룸 순회
+		for (int i = 0; i < model.getSize(); i++) {
+			String room = model.getElementAt(i);
+			// chatRoomUsers 맵에서 room에 해당하는 사용자 목록 조회
+			// 해당 채팅룸의 사용자 정보가 없으면 No users 반환
+			String users = gameRoomUsers.getOrDefault(room, "No users");
+			// 모델의 i번째 요소 업데이트
+			// 출력 형식: Chat Room 1 (User1, User2)
+			model.set(i, room + " (" + users + ")");
+		}
+	}
 
 //    private void addWaitingRoom(String roomTitle, JPanel panel) {
 //        JButton waitingRoomButton = new JButton(roomTitle);
@@ -68,4 +155,3 @@ public class WaitingRoomPanel extends JPanel {
 //        panel.repaint();
 //    }
 }
-
