@@ -129,8 +129,13 @@ public class WaitingRoomPanel extends JPanel {
 		public void run() {
 			while(true) {
 				try {
-					rooms = (Vector<Room>)objIs.readObject();
+					MOD packet = (MOD)objIs.readObject();
+					if (packet.getMode() == MODE.FAIL_MOD) continue;
+
+					rooms = (Vector<Room>)packet.getPayload();
+
 					System.out.println("room 개수: " + rooms.size());
+
 					model.clear();
 					for(Room room : rooms) {
 						String roomName = room.getRoomName();

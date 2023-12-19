@@ -1,13 +1,9 @@
 package Server;
 
+import util.*;
+
 import java.io.*;
-import java.net.*;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Vector;
@@ -91,7 +87,7 @@ public class Server {
         for (UserService user : allUsers) {
             try {
                 ObjectOutputStream objOs = user.getObjOutputStream();
-                objOs.writeObject(new Vector<>(rooms));
+                objOs.writeObject(new MOD(MODE.SUCCESS_MOD,new Vector<>(rooms)));
                 objOs.flush();
                 System.out.println("user : " + user.getName() + " 에게 전송함");
             } catch (IOException e) {
