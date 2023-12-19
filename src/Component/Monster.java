@@ -1,5 +1,9 @@
 package Component;
 
-public class Monster {
+import java.awt.Point;
 
+public class Monster {
+	int HP;
+	Point point;
+	
 }
