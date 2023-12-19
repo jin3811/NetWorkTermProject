@@ -36,6 +36,7 @@ public class WaitingRoomPanel extends JPanel {
 	private Thread loadingThread;
 	private Thread gameStartThread;
 	private JLabel stateLabel;
+	private TEAM myTeamColor;
 	public WaitingRoomPanel(RandomDefence context, String nickname, Socket socket) {
 		this.context = context;
 		this.nickname = nickname;
@@ -84,6 +85,7 @@ public class WaitingRoomPanel extends JPanel {
 
 					// 방장이 어딜 떠날라고
 					selectButton.setEnabled(false);
+					myTeamColor = TEAM.RED;
 				}
 			}
 		});
@@ -99,6 +101,7 @@ public class WaitingRoomPanel extends JPanel {
 				int a = roomList.getSelectedIndex();
 				System.out.println(selectedGameRoom + a);
 				topPanel.add(stateLabel, BorderLayout.CENTER);
+				myTeamColor = TEAM.BLUE;
 				sendMessageToServer(MODE.PARTICIPANT_MOD, selectedGameRoom);
 			}
 		});
@@ -221,7 +224,7 @@ public class WaitingRoomPanel extends JPanel {
 				}
 			}
 			System.out.println("화면 전환");
-			context.transition(new GamePanel(context, nickname, socket, objOS, objIs, roomNum));
+			context.transition(new GamePanel(context, nickname, socket, objOS, objIs, roomNum, myTeamColor));
 		}
 	}
 }
