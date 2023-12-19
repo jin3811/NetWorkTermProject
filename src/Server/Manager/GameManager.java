@@ -74,7 +74,12 @@ public class GameManager {
 
         @Override
         public void run() {
-            super.run();
+//            super.run();
+//            while (true){
+//
+//            }
+
+            System.out.println("나 잘돈다 ㅋㅋ");
         }
     }
 }

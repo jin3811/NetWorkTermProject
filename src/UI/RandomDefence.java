@@ -34,6 +34,8 @@ public class RandomDefence extends JFrame{
         getContentPane().removeAll();
         getContentPane().add(displayTarget);
         setContentPane(displayTarget);
+        getContentPane().revalidate();
+        getContentPane().repaint();
         if (displayCommand != null) displayCommand.execute();
     }
 
