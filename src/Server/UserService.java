@@ -56,21 +56,34 @@ public class UserService extends Thread implements Serializable{
                 System.out.println("MOD 수신함 : " + receive.toString());
                 switch (receive.getMode()) {
                     case CREATE_ROOM_MOD -> {
-                        this.server.createRoom((String)receive.getPayload(), id);
+                        this.server.roomMananger.createRoom((String)receive.getPayload(), id);
+                        System.out.println("id : " + id + " 방 생성 요청");
                     }
                     case GET_ROOM_MOD -> {
-                        objOS.writeObject(new MOD(MODE.SUCCESS_MOD, new Vector<>(this.server.getRooms())));
+                        objOS.writeObject(new MOD(
+                                MODE.SUCCESS_GET_ROOM_MOD,
+                                new Vector<>(this.server.roomMananger.getRooms())));
                         objOS.flush();
+                    }
+                    case PARTICIPANT_MOD -> {
+//                        System.out.println("어 처리해줄게");
+                        String roomName = (String)receive.getPayload();
+                        this.server.roomMananger.enterRoom(roomName, this.id);
+                        System.out.println("id : " + id + " 방 참가 요청");
                     }
                 }
             }
             catch (Exception e) {
-                System.out.println("방 못만듬");
+                e.printStackTrace();
             }
         }
     }
 
     public ObjectOutputStream getObjOutputStream() {
         return this.objOS;
+    }
+
+    public int getUserID() {
+        return id;
     }
 }
