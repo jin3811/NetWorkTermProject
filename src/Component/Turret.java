@@ -1,16 +1,17 @@
 package Component;
 
 import java.awt.Point;
+import java.awt.Rectangle;
 
 public class Turret {
 	private Point postion;
 	private String team;
 	private int atkPower;
 	
-	public Turret(Point position, String team, int atkPower) {
+	public Turret(Point position, String team) {
 		this.postion = position;
 		this.team = team;
-		this.atkPower = atkPower;
+		this.atkPower = 10;
 	}
 
 	public Point getPostion() {
@@ -29,4 +30,6 @@ public class Turret {
 	public void attack() {
 		
 	}
+	
+	public Rectangle getArea(int turr)
 }
