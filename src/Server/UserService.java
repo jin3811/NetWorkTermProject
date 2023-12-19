@@ -1,8 +1,8 @@
 package Server;
 
-import util.MOD;
-import util.MODE;
+import util.*;
 
+import java.util.*;
 import java.io.*;
 import java.net.Socket;
 
@@ -56,7 +56,11 @@ public class UserService extends Thread implements Serializable{
                 System.out.println("MOD 수신함 : " + receive.toString());
                 switch (receive.getMode()) {
                     case CREATE_ROOM_MOD -> {
-                        this.server.createRoom(receive.getAdditionalData(), id);
+                        this.server.createRoom((String)receive.getPayload(), id);
+                    }
+                    case GET_ROOM_MOD -> {
+                        objOS.writeObject(new MOD(MODE.SUCCESS_MOD, new Vector<>(this.server.getRooms())));
+                        objOS.flush();
                     }
                 }
             }

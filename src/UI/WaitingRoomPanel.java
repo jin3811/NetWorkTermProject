@@ -3,7 +3,7 @@ package UI;
 import javax.swing.*;
 
 import Server.Room;
-import util.MODE;
+import util.*;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -73,13 +73,10 @@ public class WaitingRoomPanel extends JPanel {
 					roomName = roomName.trim();
 
 					// 서버에 새 방 생성 요청 보냄
-					sendMessageToServer(roomName);
+					sendMessageToServer(MODE.CREATE_ROOM_MOD, roomName);
 				}
 			}
 		});
-
-		// 게임룸 사용자 정보 가져오기
-		fetchGameRoomUsers();
 
 		JButton selectButton = new JButton("게임방 입장");
 		selectButton.addActionListener(new ActionListener() {
@@ -108,37 +105,16 @@ public class WaitingRoomPanel extends JPanel {
 		Thread updateRoomListThread = new UpdateRoomList();
 		updateRoomListThread.start();
 
+		sendMessageToServer(MODE.GET_ROOM_MOD, null);
+
 		setVisible(true);
 	}
 
-	// 첫 화면을 구성할 게임룸을 조회합니다.
-	private void fetchGameRoomUsers() {
-//		// 서버로부터 채팅룸 사용자 정보를 가져오는 로직을 가정.
-//		// 실제 애플리케이션에서는 서버와의 통신을 통해 이 정보를 얻어야 함
-//		gameRoomUsers.put("Game Room 1", "User1, User2");
-//		gameRoomUsers.put("Game Room 2", "User3, User4");
-//		gameRoomUsers.put("Game Room 3", "User5, User6");
-//
-//		// 채팅룸 목록 ChatRoomList(JList)의 모델을 가져옴
-//		// 이 모델은 채팅룸 목록의 데이터를 관리함
-//		// 각 채팅룸에 해당 채팅룸의 사용자 목록 표시
-//		DefaultListModel<String> model = (DefaultListModel<String>) roomList.getModel();
-//		// 모델의 모든 채팅룸 순회
-//		for (int i = 0; i < model.getSize(); i++) {
-//			String room = model.getElementAt(i);
-//			// chatRoomUsers 맵에서 room에 해당하는 사용자 목록 조회
-//			// 해당 채팅룸의 사용자 정보가 없으면 No users 반환
-//			String users = gameRoomUsers.getOrDefault(room, "No users");
-//			// 모델의 i번째 요소 업데이트
-//			// 출력 형식: Chat Room 1 (User1, User2)
-//			model.set(i, room + " (" + users + ")");
-//		}
-	}
 	// 서버에 메시지를 보내는 메소드
-	private void sendMessageToServer(String message) {
+	private void sendMessageToServer(MODE mode, String message) {
 	    try {
 	    	if(objOS!= null) {
-	    		objOS.writeObject(new util.MOD(MODE.CREATE_ROOM_MOD, message));
+	    		objOS.writeObject(new MOD(mode, message));
 	    		objOS.flush();
 	    	}
 	    } catch (IOException ex) {
@@ -175,8 +151,13 @@ public class WaitingRoomPanel extends JPanel {
 //					// TODO: handle exception
 //				}
 				try {
-					rooms = (Vector<Room>)objIs.readObject();
+					MOD packet = (MOD)objIs.readObject();
+					if (packet.getMode() == MODE.FAIL_MOD) continue;
+
+					rooms = (Vector<Room>)packet.getPayload();
+
 					System.out.println("room 개수: " + rooms.size());
+
 					model.clear();
 					for(Room room : rooms) {
 						String roomName = room.getRoomName();
