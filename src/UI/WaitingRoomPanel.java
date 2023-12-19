@@ -20,6 +20,7 @@ import java.util.Vector;
 
 public class WaitingRoomPanel extends JPanel {
 
+	private RandomDefence context;
 	private String nickname;
 	private Socket socket;
 
@@ -35,8 +36,12 @@ public class WaitingRoomPanel extends JPanel {
     DefaultListModel<String> model;
 	private boolean isReady = false;
 
+	private Thread updateRoomListThread;
+	private Thread loadingThread;
+	private Thread gameStartThread;
+	private JLabel stateLabel;
 	public WaitingRoomPanel(RandomDefence context, String nickname, Socket socket) {
-
+		this.context = context;
 		this.nickname = nickname;
 		model = new DefaultListModel<>();
 		gameRoomUsers = new HashMap<>(); //
@@ -61,9 +66,15 @@ public class WaitingRoomPanel extends JPanel {
 		setLayout(new BorderLayout());
 
 		roomList = new JList<>(model);
-		
+
+		stateLabel = new JLabel("참가자 대기중");
+		stateLabel.setHorizontalAlignment(JLabel.CENTER);
+		loadingThread = new PlayerWaitingThread(stateLabel);
+
 		JPanel topPanel = new JPanel(new BorderLayout());
 		JButton createRoomButton = new JButton("방 만들기");
+		JButton selectButton = new JButton("게임방 입장");
+
 		createRoomButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -74,47 +85,51 @@ public class WaitingRoomPanel extends JPanel {
 
 					// 서버에 새 방 생성 요청 보냄
 					sendMessageToServer(MODE.CREATE_ROOM_MOD, roomName);
+
+					topPanel.add(stateLabel, BorderLayout.CENTER);
+					loadingThread.start();
+
+					// 방장이 어딜 떠날라고
+					selectButton.setEnabled(false);
 				}
 			}
 		});
-
-		JButton selectButton = new JButton("게임방 입장");
 		selectButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				// 현재 선택된 채팅룸 가져오기(String)
 				selectedGameRoom = roomList.getSelectedValue();
-				if (selectedGameRoom != null) {
-//                    initializeChatFrame(); // 채팅화면 초기화하는 함수 호출
-//                	initializeGameFrame(); // 게임 화면 초기화하는 메서드 호출
-//                    chatRoomFrame.setVisible(false);
-					
-					
-				} else {
+				if (selectedGameRoom == null) {
 					JOptionPane.showMessageDialog(context, "게임룸을 선택해주세요.");
 				}
+
+				int a = roomList.getSelectedIndex();
+				System.out.println(selectedGameRoom + a);
+				topPanel.add(stateLabel, BorderLayout.CENTER);
+				sendMessageToServer(MODE.PARTICIPANT_MOD, selectedGameRoom);
 			}
 		});
-		
-		// topPanel에 방만들기 버튼 추가 
+
+		// topPanel에 방만들기 버튼 추가
 	    topPanel.add(createRoomButton, BorderLayout.EAST); // Adds the button to the right side
 	    add(topPanel, BorderLayout.NORTH);
 		add(new JScrollPane(roomList), BorderLayout.CENTER);
 		add(selectButton, BorderLayout.SOUTH);
 
-		Thread updateRoomListThread = new UpdateRoomList();
+		updateRoomListThread = new UpdateRoomList();
 		updateRoomListThread.start();
 
+		// 첫 화면 띄우기 위한 데이터 가져오기
 		sendMessageToServer(MODE.GET_ROOM_MOD, null);
 
 		setVisible(true);
 	}
 
 	// 서버에 메시지를 보내는 메소드
-	private void sendMessageToServer(MODE mode, String message) {
+	private void sendMessageToServer(MODE mode, Object payload) {
 	    try {
 	    	if(objOS!= null) {
-	    		objOS.writeObject(new MOD(mode, message));
+	    		objOS.writeObject(new MOD(mode, payload));
 	    		objOS.flush();
 	    	}
 	    } catch (IOException ex) {
@@ -130,45 +145,83 @@ public class WaitingRoomPanel extends JPanel {
 		@Override
 		public void run() {
 			while(true) {
-//				try {
-//					rooms = (Vector<Room>)objIs.readObject();
-//					System.out.println("room 개수: " + rooms.size());
-//					SwingUtilities.invokeLater(new Runnable() {
-//						
-//						@Override
-//						public void run() {
-//							model.clear();
-//							for(Room room : rooms) {
-//								roomName = room.getRoomName();
-//								model.addElement(roomName); // 모델에 방제 추가
-//							}
-//							if(!rooms.isEmpty()) {
-//								roomList.setSelectedValue(roomName, true);
-//							}
-//						}
-//					});
-//				}catch (Exception e) {
-//					// TODO: handle exception
-//				}
 				try {
 					MOD packet = (MOD)objIs.readObject();
-					if (packet.getMode() == MODE.FAIL_MOD) continue;
+					MODE mode = packet.getMode();
 
-					rooms = (Vector<Room>)packet.getPayload();
+					if (mode == MODE.FAIL_CREATE_ROOM_MOD) continue;
+					else if (mode == MODE.SUCCESS_GET_ROOM_MOD || mode == MODE.SUCCESS_CREATE_ROOM_MOD) {
+						rooms = (Vector<Room>)packet.getPayload();
 
-					System.out.println("room 개수: " + rooms.size());
+						System.out.println("room 개수: " + rooms.size());
 
-					model.clear();
-					for(Room room : rooms) {
-						String roomName = room.getRoomName();
+						model.clear();
+						for(Room room : rooms) {
+							String roomName = room.getRoomName();
 
-						model.addElement(roomName); // 모델에 방제 추가
-						roomList.setSelectedValue(roomName, true);
+							model.addElement(roomName); // 모델에 방제 추가
+							roomList.setSelectedValue(roomName, true);
+						}
+					}
+					else if (mode == MODE.GAME_START_SIGNAL_MOD) {
+						System.out.println(nickname + " : 게임 시작신호 받음");
+						if (loadingThread != null) {
+							loadingThread.interrupt();
+							gameStartThread = new GameStartThread();
+							gameStartThread.start();
+						}
+
 					}
 				}catch (Exception e) {
 					// TODO: handle exception
 				}
 			}
+		}
+	}
+
+	private class PlayerWaitingThread extends Thread{
+		private JLabel loading;
+		private String origin;
+
+		public PlayerWaitingThread(JLabel loading) {
+			this.loading = loading;
+			origin = loading.getText();
+		}
+
+		@Override
+		public void run() {
+			int a = 0;
+			String last;
+
+			while(true) {
+				last = "";
+				for (int i = 0; i < a; i++) {
+					last += ".";
+				}
+				loading.setText(origin + last);
+				a = (a + 1) % 4;
+
+				try {
+					sleep(250);
+				} catch (InterruptedException e) {
+					throw new RuntimeException(e);
+				}
+			}
+		}
+	}
+
+	private class GameStartThread extends Thread {
+		@Override
+		public void run() {
+			for (int i = 5 ; i >= 0; i--) {
+				stateLabel.setText(i + "초후 게임이 시작됩니다. 준비해주세요.");
+				try {
+					sleep(1000);
+				} catch (InterruptedException e) {
+					throw new RuntimeException(e);
+				}
+			}
+			System.out.println("화면 전환");
 		}
 	}
 }
