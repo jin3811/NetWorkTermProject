@@ -198,7 +198,7 @@ public class WaitingRoomPanel extends JPanel {
 				try {
 					sleep(250);
 				} catch (InterruptedException e) {
-					throw new RuntimeException(e);
+					System.out.println("게임 화면으로 넘어가기 위해 참여자 대기 스레드 종료");
 				}
 			}
 		}
