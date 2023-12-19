@@ -268,7 +268,6 @@ public class GamePanel extends JPanel {
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
-		System.out.println("교수님 미워요");
 		setVisible(true);
 	}
 	// 서버에서 사용할 코드(미리 적어놓음)
