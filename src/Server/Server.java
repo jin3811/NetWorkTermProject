@@ -1,5 +1,6 @@
 package Server;
 
+import Server.Manager.*;
 import util.*;
 
 import java.io.*;
@@ -11,11 +12,9 @@ import java.util.Vector;
 public class Server {
     private static final int PORT = 9999;
     private ServerSocket serverSocket;
-    private Vector<UserService> allUsers = new Vector<>();
 
-    // 채팅방 로직 추가중 코드
-    // Map: 키는 채팅방 이름, 값은 UsreService 인스턴스의 집합
-    private Vector<Room> rooms = new Vector<>(); // 방 관리
+    public UserManager userManager = new UserManager(this);
+    public RoomMananger roomMananger = new RoomMananger(this);
     /*
      * 생성자
      * 서버 소켓 생성
@@ -64,7 +63,7 @@ public class Server {
                     // 이를 allUsers 벡터에 추가
                     // 서버는 각 클라이언트와 독립적 통신 가능
                     UserService user = new UserService(Server.this, clientSocket, id++);
-                    allUsers.add(user);
+                    userManager.addUser(user);
                     user.start();
                     System.out.println("유저 서비스 시작");
                 } catch (Exception e) {
@@ -74,31 +73,8 @@ public class Server {
         }
     }
 
-    public synchronized void createRoom(String name, int managerId) {
-        Room r = new Room(name, managerId);
-        rooms.add(r);
-        notifyRoomChange();
 
-        System.out.println(name + " room 만들기 성공");
-        System.out.println("room개수: "+rooms.size());
-    }
 
-    private void notifyRoomChange() {
-        for (UserService user : allUsers) {
-            try {
-                ObjectOutputStream objOs = user.getObjOutputStream();
-                objOs.writeObject(new MOD(MODE.SUCCESS_MOD,new Vector<>(rooms)));
-                objOs.flush();
-                System.out.println("user : " + user.getName() + " 에게 전송함");
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-    }
-
-    public Vector<Room> getRooms() {
-        return rooms;
-    }
 }
 
 
