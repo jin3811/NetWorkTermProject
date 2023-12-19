@@ -221,7 +221,7 @@ public class WaitingRoomPanel extends JPanel {
 				}
 			}
 			System.out.println("화면 전환");
-//			context.transition(new GamePanel(context, ..., roomNum));
+			context.transition(new GamePanel(context, nickname, socket, objOS, objIs, roomNum));
 		}
 	}
 }
