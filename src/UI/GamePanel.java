@@ -3,6 +3,7 @@ package UI;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 
+import Component.Turret;
 import Server.Room;
 import util.MODE;
 
@@ -23,7 +24,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Vector;
 import java.util.List;
-
 // 실제 게임을 진행하는 panel
 public class GamePanel extends JPanel {
 	private RandomDefence context;
@@ -229,26 +229,47 @@ public class GamePanel extends JPanel {
 				Point clickPoint = e.getPoint();
 				System.out.println("클릭: " + clickPoint);
 				
+				// 클릭 point의 타일 좌상단 구석 계산
+				int tileSize = 50;
+				int tileX = (clickPoint.x / tileSize) * tileSize;
+				int tileY = (clickPoint.y / tileSize) * tileSize;
+
+				Point turretPoint = new Point(tileX, tileY);
+//				Rectangle turretRect = new Rectangle(tileX, tileY, tileSize, tileSize);
+				
+				// 서버에 포탑 배치 요청
+				sendTurretRequest(turretPoint);
+				
 				// 잔디 타일 위를 클릭했는지 확인하고 포탑 위치 추가
 				if (isGrassTile(clickPoint)) {
-					// 타일 크기
-					int tileSize = 50;
-
-					// 클릭된 위치를 타일 크기로 나눈 몫에 타일 크기를 곱해서 정렬
-					int tileX = (clickPoint.x / tileSize) * tileSize;
-					int tileY = (clickPoint.y / tileSize) * tileSize;
-
-					Point turretPoint = new Point(tileX, tileY);
-					
-					turrets.add(turretPoint);
-					repaint(); // 포탑을 다시 그립니다.
+					// 서버에 포탑 배치 요청
+					sendTurretRequest(turretPoint);
 				}
 			}
+
+			
 		});
 
 		setVisible(true);
 	}
-
+	// 서버에서 사용할 코드(미리 적어놓음)
+	public void handleTurretRequest(Point turretPoint) {
+		
+	}
+	// 서버에 포탑 배치 요청 보내기
+	private void sendTurretRequest(Point turretPoint) {
+		// TODO Auto-generated method stub
+		
+	}
+	// 서버 응답 처리
+	private void handleServerResponse(Object response) {
+		// 1. 서버로부터 응답을 받는다
+		// 2. 응답받은 것에서 turret의 Position을 꺼낸다
+		// 3. turrets에 받아온 turret의 Position을 추가한다.
+		// 4. repaint() 호출하여 다시 그린다.
+		
+		repaint();
+	}
 	// 클릭한 위치가 잔디 타일 위인지 확인하는 메소드
 	private boolean isGrassTile(Point clickPoint) {
 		// 임시로 잔디 타일이라고 가정하고 true 반환
@@ -256,6 +277,8 @@ public class GamePanel extends JPanel {
 		return true;
 	}
 
+	// 1. 초기에 불려짐
+	// 2. repaint() 호출시 불려짐
 	@Override
 	protected void paintComponent(Graphics g) {
 		super.paintComponent(g);
