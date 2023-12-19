@@ -76,7 +76,9 @@ public class LoginFormPanel extends JPanel {
                 if (isIpFormat(ip) && isPortFormat(port) && !nickname.isEmpty()) {
                     System.out.println(ip + ":" + port + " " + nickname + " 접속시도");
                     connectToServer(ip, port, nickname); // 서버 연결 부분: 소켓 초기화
-                    context.transition(new WaitingRoomPanel(context, nickname, socket));
+                    // 테스트를 위한 임시 주석처리: GamePanel확인용
+//                    context.transition(new WaitingRoomPanel(context, nickname, socket));
+                    context.transition(new GamePanel(context, nickname, socket));
                 }
                 else {
                     System.out.println("ip 또는 port 번호를 제대로 입력해주세요.");
@@ -120,7 +122,7 @@ public class LoginFormPanel extends JPanel {
     private void connectToServer(String ip, String port, String nickname) {
         try {
         	// 받아온 ip, port로 소켓 연결
-            socket = new Socket(ip, Integer.parseInt(port));
+            socket = new Socket("localhost", 9999);//Integer.parseInt(port));
         } catch (Exception e) {
             e.printStackTrace();
         }
