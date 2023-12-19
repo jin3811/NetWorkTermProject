@@ -5,11 +5,11 @@ import java.util.Objects;
 
 public class MOD implements Serializable {
     private MODE mode;
-    private String additionalData;
+    private Object payload;
 
-    public MOD(MODE mode, String additionalData) {
+    public MOD(MODE mode, Object payload) {
         this.mode = mode;
-        this.additionalData = additionalData;
+        this.payload = payload;
     }
 
     public MOD(MODE mode) {
@@ -28,8 +28,8 @@ public class MOD implements Serializable {
         this.mode = mode;
     }
 
-    public String getAdditionalData() {
-        return additionalData;
+    public Object getPayload() {
+        return payload;
     }
 
     @Override
