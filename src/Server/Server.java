@@ -15,6 +15,7 @@ public class Server {
 
     public UserManager userManager = new UserManager(this);
     public RoomMananger roomMananger = new RoomMananger(this);
+    public GameManager gameManager = new GameManager(this);
     /*
      * 생성자
      * 서버 소켓 생성

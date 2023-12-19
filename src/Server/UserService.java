@@ -50,13 +50,14 @@ public class UserService extends Thread implements Serializable{
     // 클라이언트와 지속적으로 통신하는 부분
     @Override
     public void run() { // 클라이언트에서 날린 요청을 계속 받고, 보내는 기능 수행
+        Room r = null;
         while(true) {
             try {
                 MOD receive = (MOD)objIs.readObject();
                 System.out.println("MOD 수신함 : " + receive.toString());
                 switch (receive.getMode()) {
                     case CREATE_ROOM_MOD -> {
-                        this.server.roomMananger.createRoom((String)receive.getPayload(), id);
+                        r = this.server.roomMananger.createRoom((String)receive.getPayload(), id);
                         System.out.println("id : " + id + " 방 생성 요청");
                     }
                     case GET_ROOM_MOD -> {
@@ -66,10 +67,14 @@ public class UserService extends Thread implements Serializable{
                         objOS.flush();
                     }
                     case PARTICIPANT_MOD -> {
-//                        System.out.println("어 처리해줄게");
                         String roomName = (String)receive.getPayload();
-                        this.server.roomMananger.enterRoom(roomName, this.id);
+                        r = this.server.roomMananger.enterRoom(roomName, this.id);
                         System.out.println("id : " + id + " 방 참가 요청");
+                    }
+                    case GAME_START_MOD -> {
+                        long roomNum = (long)receive.getPayload();
+                        this.server.gameManager.addGame(r, roomNum);
+                        this.server.gameManager.startGame(roomNum);
                     }
                 }
             }

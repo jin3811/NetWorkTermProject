@@ -1,10 +1,12 @@
 package UI;
 
 import javax.imageio.ImageIO;
+import javax.naming.ldap.SortKey;
 import javax.swing.*;
 
 import Component.Turret;
 import Server.Room;
+import util.MOD;
 import util.MODE;
 
 import java.awt.*;
@@ -43,8 +45,16 @@ public class GamePanel extends JPanel {
 	List<Point> allPoints = new ArrayList<>();
 	List<Point> bluePath;
 	List<Point> redPath;
-	public GamePanel(RandomDefence context, String nickname, Socket socket) {
+
+	private ObjectOutputStream objOs;
+	private ObjectInputStream objIs;
+	private Socket socket;
+	private long roomNum;
+
+	public GamePanel(RandomDefence context, String nickname, Socket socket, long roomNum) {
 		this.context = context;
+		this.socket = socket;
+		this.roomNum = roomNum;
 
 		System.out.println("GamePanel 입장");
 		context.setSize(1000, 1000);
@@ -249,6 +259,16 @@ public class GamePanel extends JPanel {
 
 			
 		});
+
+		try {
+			objOs = new ObjectOutputStream(socket.getOutputStream());
+			objIs = new ObjectInputStream(socket.getInputStream());
+
+			objOs.writeObject(new MOD(MODE.GAME_START_MOD, roomNum));
+			objOs.flush();
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 
 		setVisible(true);
 	}
