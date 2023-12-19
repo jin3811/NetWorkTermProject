@@ -28,7 +28,8 @@ import java.util.List;
 public class GamePanel extends JPanel {
 	private RandomDefence context;
 	private Image grassImage;
-	private Image pathImage;
+	private Image pathImage1;
+	private Image pathImage2;
 	private Image redTeamImage;
 	private Image blueTeamImage;
 	private Image spawnerImage;
@@ -63,7 +64,8 @@ public class GamePanel extends JPanel {
 		
 		try {
 			grassImage = ImageIO.read(getClass().getResource("/Image/grass.png"));
-			pathImage = ImageIO.read(getClass().getResource("/Image/ground.png"));
+			pathImage1 = ImageIO.read(getClass().getResource("/Image/ground1.png"));
+			pathImage2 = ImageIO.read(getClass().getResource("/Image/ground2.png"));
 			redTeamImage = ImageIO.read(getClass().getResource("/Image/red.png"));
 			blueTeamImage = ImageIO.read(getClass().getResource("/Image/blue.png"));
 			spawnerImage = ImageIO.read(getClass().getResource("/Image/spawner.png"));
@@ -117,28 +119,58 @@ public class GamePanel extends JPanel {
 		drawRedTeam(g);
 		drawBlueTeam(g);
 		drawSpawner(g);
-		drawPath(g);
-
+		drawPath_red(g);
+		drawPath_blue(g);
+		
 		// 포탑 위치에 포탑 이미지 그리기
 		for (Point turret : turrets) {
 			g.drawImage(turret1Image, turret.x, turret.y, this);
 		}
-//		if (pathImage != null) {
-//			int pathWidth = pathImage.getWidth(this);
-//			int pathHeight = pathImage.getHeight(this);
-//			g.drawImage(pathImage, 0, 0, pathWidth, pathHeight, this);
+//		if (pathImage1 != null) {
+//			int pathWidth = pathImage1.getWidth(this);
+//			int pathHeight = pathImage1.getHeight(this);
+//			g.drawImage(pathImage1, 0, 0, pathWidth, pathHeight, this);
 //		}
 
 	}
 
-	private void drawPath(Graphics g) {
-		if (pathImage != null) {
+	private void drawPath_red(Graphics g) {
+		if (pathImage1 != null) {
+			
+			int pathWidth = pathImage1.getWidth(this);
+			int pathHeight = pathImage1.getHeight(this);
+//			for(int i=2;i<=9;i++) {
+//				g.drawImage(pathImage1, allPoints.get(i).x, allPoints.get(i).y, this);
+//			}
+			for(int i=22;i<=29;i++) {
+				g.drawImage(pathImage1, allPoints.get(i).x, allPoints.get(i).y, this);
+			}
+//			for(int i=162;i<=168;i++) {
+//				g.drawImage(pathImage1, allPoints.get(i).x, allPoints.get(i).y, this);
+//			}
+			for(int i=180;i<=188;i++) {
+				g.drawImage(pathImage1, allPoints.get(i).x, allPoints.get(i).y, this);
+			}
 
-			int pathWidth = pathImage.getWidth(this);
-			int pathHeight = pathImage.getHeight(this);
-
+			
 		}
 	}
+	private void drawPath_blue(Graphics g) {
+//		if (pathImage2 != null) {
+//
+//			int pathWidth = pathImage2.getWidth(this);
+//			int pathHeight = pathImage2.getHeight(this);
+//			for(int i=2;i<=17;i++) {
+//				g.drawImage(pathImage1, allPoints.get(i).x, allPoints.get(i).y, this);
+//			}
+//			for(int i=22;i<=37;i++) {
+//				g.drawImage(pathImage1, allPoints.get(i).x, allPoints.get(i).y, this);
+//			}
+//			
+//		}
+		
+	}
+
 
 	private void drawSpawner(Graphics g) {
 		if (spawnerImage != null) {
