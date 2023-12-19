@@ -9,4 +9,10 @@ public enum MODE {
     PARTICIPANT_MOD, // 이 방 들어갈래요
     GAME_READY_SIGNAL_MOD, // 방 사람 왔다. 시작 준비 해라
     GAME_START_MOD, // 게임 시작할게요
+    RED_TURRET_MOD, // 클라야 레드팀 터렛 그려라
+    RED_MONSTER_MOD, // 클라야 레드팀 몬스터 그려라
+    BLUE_TURRET_MOD, // 클라야 블루팀 터렛 그려라
+    BLUE_MONSTER_MOD, // 클라야 블루팀 몬스터 그러랴
+    RED_TURRET_UPDATE_MOD, // 서버야 레드팀 터렛 업데이트 했다
+    BLUE_TURRET_UPDATE_MOD, // 서버야 레드팀 터렛 업데이트 했다
 }

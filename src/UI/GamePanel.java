@@ -8,6 +8,7 @@ import Component.Turret;
 import Server.Room;
 import util.MOD;
 import util.MODE;
+import util.TEAM;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -51,7 +52,7 @@ public class GamePanel extends JPanel {
 	private Socket socket;
 	private long roomNum;
 
-	public GamePanel(RandomDefence context, String nickname, Socket socket, ObjectOutputStream objOs, ObjectInputStream objIs, long roomNum) {
+	public GamePanel(RandomDefence context, String nickname, Socket socket, ObjectOutputStream objOs, ObjectInputStream objIs, long roomNum, TEAM team) {
 		this.context = context;
 		this.socket = socket;
 		this.objOs = objOs;
@@ -268,7 +269,6 @@ public class GamePanel extends JPanel {
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
-		System.out.println("교수님 미워요");
 		setVisible(true);
 	}
 	// 서버에서 사용할 코드(미리 적어놓음)
