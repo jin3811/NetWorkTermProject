@@ -37,6 +37,16 @@ public class GameManager {
 
         public Player(UserService user) {
             this.user = user;
+            this.gold = 500;
+            this.life = 5;
+        }
+
+        public synchronized void diffGold(int df) {
+            gold += df;
+        }
+
+        public synchronized void decreaseLife() {
+            life -= 1;
         }
     }
 
