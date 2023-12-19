@@ -37,6 +37,16 @@ public class GameManager {
 
         public Player(UserService user) {
             this.user = user;
+            this.gold = 500;
+            this.life = 5;
+        }
+
+        public synchronized void diffGold(int df) {
+            gold += df;
+        }
+
+        public synchronized void decreaseLife() {
+            life -= 1;
         }
     }
 
@@ -64,7 +74,12 @@ public class GameManager {
 
         @Override
         public void run() {
-            super.run();
+//            super.run();
+//            while (true){
+//
+//            }
+
+            System.out.println("나 잘돈다 ㅋㅋ");
         }
     }
 }

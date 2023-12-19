@@ -31,5 +31,7 @@ public class Turret {
 		
 	}
 	
-	public Rectangle getArea(int turr)
+//	public Rectangle getArea(int turr) {
+//
+//	}
 }

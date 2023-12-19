@@ -77,8 +77,8 @@ public class LoginFormPanel extends JPanel {
                     System.out.println(ip + ":" + port + " " + nickname + " 접속시도");
                     connectToServer(ip, port, nickname); // 서버 연결 부분: 소켓 초기화
 //                     테스트를 위한 임시 주석처리: GamePanel확인용
-//                    context.transition(new WaitingRoomPanel(context, nickname, socket));
-                    context.transition(new GamePanel(context, nickname, socket));
+                    context.transition(new WaitingRoomPanel(context, nickname, socket));
+//                    context.transition(new GamePanel(context, nickname, socket));
                 }
                 else {
                     System.out.println("ip 또는 port 번호를 제대로 입력해주세요.");

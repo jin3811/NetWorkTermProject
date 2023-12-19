@@ -51,9 +51,11 @@ public class GamePanel extends JPanel {
 	private Socket socket;
 	private long roomNum;
 
-	public GamePanel(RandomDefence context, String nickname, Socket socket, long roomNum) {
+	public GamePanel(RandomDefence context, String nickname, Socket socket, ObjectOutputStream objOs, ObjectInputStream objIs, long roomNum) {
 		this.context = context;
 		this.socket = socket;
+		this.objOs = objOs;
+		this.objIs = objIs;
 		this.roomNum = roomNum;
 
 		System.out.println("GamePanel 입장");
@@ -261,15 +263,12 @@ public class GamePanel extends JPanel {
 		});
 
 		try {
-			objOs = new ObjectOutputStream(socket.getOutputStream());
-			objIs = new ObjectInputStream(socket.getInputStream());
-
 			objOs.writeObject(new MOD(MODE.GAME_START_MOD, roomNum));
 			objOs.flush();
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
-
+		System.out.println("교수님 미워요");
 		setVisible(true);
 	}
 	// 서버에서 사용할 코드(미리 적어놓음)
