@@ -8,8 +8,6 @@ import util.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -24,8 +22,6 @@ public class WaitingRoomPanel extends JPanel {
 	private String nickname;
 	private Socket socket;
 
-	private DataOutputStream dos;
-	private DataInputStream dis;
 	private JList<String> roomList;
 	private Map<String, String> gameRoomUsers; // 대기방별 유저
 	private String selectedGameRoom;
@@ -51,9 +47,6 @@ public class WaitingRoomPanel extends JPanel {
 			// 스트림 초기화
 			objOS = new ObjectOutputStream(socket.getOutputStream());
 			objIs = new ObjectInputStream(socket.getInputStream());
-
-			dis = new DataInputStream(socket.getInputStream());
-			dos = new DataOutputStream(socket.getOutputStream());
 
 			if (this.socket != null)
 				System.out.println("소켓 가져오기 완료"); // 정상 확인
@@ -163,11 +156,12 @@ public class WaitingRoomPanel extends JPanel {
 							roomList.setSelectedValue(roomName, true);
 						}
 					}
-					else if (mode == MODE.GAME_START_SIGNAL_MOD) {
+					else if (mode == MODE.GAME_READY_SIGNAL_MOD) {
+						long roomNum = (long)packet.getPayload();
 						System.out.println(nickname + " : 게임 시작신호 받음");
 						if (loadingThread != null) {
 							loadingThread.interrupt();
-							gameStartThread = new GameStartThread();
+							gameStartThread = new GameStartThread(roomNum);
 							gameStartThread.start();
 						}
 
@@ -211,6 +205,11 @@ public class WaitingRoomPanel extends JPanel {
 	}
 
 	private class GameStartThread extends Thread {
+		private long roomNum;
+
+		public GameStartThread(long roomNum){
+			this.roomNum = roomNum;
+		}
 		@Override
 		public void run() {
 			for (int i = 5 ; i >= 0; i--) {
@@ -222,6 +221,7 @@ public class WaitingRoomPanel extends JPanel {
 				}
 			}
 			System.out.println("화면 전환");
+//			context.transition(new GamePanel(context, ..., roomNum));
 		}
 	}
 }

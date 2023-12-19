@@ -11,13 +11,14 @@ import java.util.Vector;
 public class RoomMananger {
     private Vector<Room> rooms; // 방 관리
     private Server server;
+    private long roomNum = 1;
 
     public RoomMananger(Server server) {
         this.server = server;
         rooms = new Vector<>();
     }
 
-    public synchronized void createRoom(String name, int managerId) {
+    public synchronized Room createRoom(String name, int managerId) {
         Room r = new Room(name, managerId);
         rooms.add(r);
 
@@ -25,6 +26,8 @@ public class RoomMananger {
         System.out.println("room개수: "+rooms.size());
 
         notifyRoomChange(this.server.userManager.getAllUsers());
+
+        return r;
     }
 
     public synchronized void notifyRoomChange(Vector<UserService> allUsers) {
@@ -40,7 +43,8 @@ public class RoomMananger {
         }
     }
 
-    public synchronized void enterRoom(String roomName, int playerId) {
+    public synchronized Room enterRoom(String roomName, int playerId) {
+        Room r = null;
         for (Room room : rooms) {
             if (room.getRoomName().equals(roomName) && // 찾고자 하는 방인가?
                 room.enterEnable()) { // 들어갈 수 있는가?
@@ -52,7 +56,7 @@ public class RoomMananger {
                 ObjectOutputStream managerOS = manager.getObjOutputStream();
                 ObjectOutputStream playerOS = player.getObjOutputStream();
 
-                MOD mod = new MOD(MODE.GAME_START_SIGNAL_MOD, null);
+                MOD mod = new MOD(MODE.GAME_READY_SIGNAL_MOD, roomNum);
 
                 try {
                     managerOS.writeObject(mod);
@@ -66,9 +70,11 @@ public class RoomMananger {
                     room.participate(-1);
                 }
 
+                r = room;
                 break;
             }
         }
+        return r;
     }
 
     public Vector<Room> getRooms() {
