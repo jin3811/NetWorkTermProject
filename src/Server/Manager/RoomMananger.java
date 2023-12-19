@@ -27,11 +27,11 @@ public class RoomMananger {
         notifyRoomChange(this.server.userManager.getAllUsers());
     }
 
-    public void notifyRoomChange(Vector<UserService> allUsers) {
+    public synchronized void notifyRoomChange(Vector<UserService> allUsers) {
         for (UserService user : allUsers) {
             try {
                 ObjectOutputStream objOs = user.getObjOutputStream();
-                objOs.writeObject(new MOD(MODE.SUCCESS_MOD, new Vector<>(rooms)));
+                objOs.writeObject(new MOD(MODE.SUCCESS_GET_ROOM_MOD, new Vector<>(rooms)));
                 objOs.flush();
                 System.out.println("user : " + user.getName() + " 에게 전송함");
             } catch (IOException e) {
@@ -39,6 +39,38 @@ public class RoomMananger {
             }
         }
     }
+
+    public synchronized void enterRoom(String roomName, int playerId) {
+        for (Room room : rooms) {
+            if (room.getRoomName().equals(roomName) && // 찾고자 하는 방인가?
+                room.enterEnable()) { // 들어갈 수 있는가?
+
+                room.participate(playerId); // 자~ 드가자~
+                UserService manager = this.server.userManager.getUserbyId(room.getManagerId());
+                UserService player = this.server.userManager.getUserbyId(playerId);
+
+                ObjectOutputStream managerOS = manager.getObjOutputStream();
+                ObjectOutputStream playerOS = player.getObjOutputStream();
+
+                MOD mod = new MOD(MODE.GAME_START_SIGNAL_MOD, null);
+
+                try {
+                    managerOS.writeObject(mod);
+                    playerOS.writeObject(mod);
+
+                    managerOS.flush();
+                    playerOS.flush();
+                }
+                catch (Exception e) {
+                    System.out.println("게임 진행 실패");
+                    room.participate(-1);
+                }
+
+                break;
+            }
+        }
+    }
+
     public Vector<Room> getRooms() {
         return rooms;
     }

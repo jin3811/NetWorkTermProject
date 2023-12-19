@@ -20,4 +20,13 @@ public class UserManager {
     public Vector<UserService> getAllUsers() {
         return allUsers;
     }
+
+    public UserService getUserbyId(int id) {
+        for (UserService user : allUsers) {
+            if(user.getUserID() == id) {
+                return user;
+            }
+        }
+        return null;
+    }
 }
