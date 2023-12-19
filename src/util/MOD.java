@@ -7,7 +7,7 @@ public class MOD implements Serializable {
     private MODE mode;
     private Object payload;
 
-    public MOD(MODE mode, String payload) {
+    public MOD(MODE mode, Object payload) {
         this.mode = mode;
         this.payload = payload;
     }
