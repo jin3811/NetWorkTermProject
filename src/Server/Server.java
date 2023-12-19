@@ -99,6 +99,10 @@ public class Server {
             }
         }
     }
+
+    public Vector<Room> getRooms() {
+        return rooms;
+    }
 }
 
 
