@@ -1,9 +1,13 @@
 package util;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Objects;
 
 public class MOD implements Serializable {
+
+    @Serial
+    private static final long serialVersionUID = 267326879574723932L;
     private MODE mode;
     private Object payload;
 

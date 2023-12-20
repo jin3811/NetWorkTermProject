@@ -605,12 +605,12 @@ public class GamePanel extends JPanel {
 				try {
 					while (true) {
 						// 서버에서 Object 읽기
-						
+
 						synchronized (objIs) {
 							packet = (MOD) objIs.readObject();
-						
+
 							MODE mode = packet.getMode();
-	
+
 							switch (mode) {
 							// 상대 터렛 그리기
 							case PNT_TURRET_MOD:
@@ -629,13 +629,15 @@ public class GamePanel extends JPanel {
 								Vector<MonsterPosPair> monstersInfo = (Vector<MonsterPosPair>) packet.getPayload();
 								// 2. 골드 꺼낸다(몬스터 잡아 얻은)
 								gold += monstersInfo.get(0).idx;
-	
+
 								// 몬스터의 위치 정보 업데이트
 								updateMonsters(monstersInfo);
 								repaint();
 								break;
-	
+							case TEST_MOD:
+								System.out.println(packet.getPayload());
 							}
+
 							objIs.reset();
 						}
 					}

@@ -1,5 +1,6 @@
 package Server.Manager;
 
+import Component.Monster;
 import Server.*;
 import util.*;
 import Component.*;
@@ -174,13 +175,13 @@ public class GameManager {
             return closestDistance <= TURRET_RANGE ? closestMonster : null;
         }
 
-        public void updateTurret(List<Turret> new_turrets) {
+        public synchronized void updateTurret(List<Turret> new_turrets) {
             this.turrets.clear();
             this.turrets.addAll(new_turrets);
         }
     }
 
-    public GameSession getGameRoom(long rid) {
+    public synchronized GameSession getGameRoom(long rid) {
         return games.get(rid);
     }
 
@@ -244,7 +245,7 @@ public class GameManager {
         public boolean isGameEnd() {
             return red.getLife() == 0 || blue.getLife() == 0;
         }
-        public Player getPlayer(int uid) {
+        public synchronized Player getPlayer(int uid) {
             return red.user.getUserID() == uid ? red : blue;
         }
 

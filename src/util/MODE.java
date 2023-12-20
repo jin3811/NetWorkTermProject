@@ -14,4 +14,5 @@ public enum MODE {
     TURRET_UPDATE_MOD, // 서버야 터렛 업데이트 했다
     GAME_WIN_MOD, // 니가 이김
     GAME_LOSE_MOD, // 니가 짐
+    TEST_MOD // 아무거나 보내봄
 }
