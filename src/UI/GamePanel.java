@@ -6,8 +6,13 @@ import javax.swing.*;
 
 import Component.Turret;
 import Server.Room;
+import util.BlueArea;
+import util.BluePath;
 import util.MOD;
 import util.MODE;
+import util.RedArea;
+import util.RedPath;
+import util.RestrictArea;
 import util.TEAM;
 
 import java.awt.*;
@@ -27,6 +32,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Vector;
 import java.util.List;
+
 // 실제 게임을 진행하는 panel
 public class GamePanel extends JPanel {
 	private RandomDefence context;
@@ -40,8 +46,7 @@ public class GamePanel extends JPanel {
 	private Image turret2Image;
 	private Image monsterImage;
 
-	// 포탑 위치 저장하는 리스트
-	List<Point> turrets = new ArrayList<>();
+	
 
 	List<Point> allPoints = new ArrayList<>();
 	List<Point> bluePath;
@@ -52,22 +57,51 @@ public class GamePanel extends JPanel {
 	private Socket socket;
 	private long roomNum;
 
-	public GamePanel(RandomDefence context, String nickname, Socket socket, ObjectOutputStream objOs, ObjectInputStream objIs, long roomNum, TEAM team) {
+	private TEAM team;
+
+	// 추가중..
+	
+	// 포탑 설치구역 가지는 객체
+	private BlueArea blueAreaInstance;
+	private RedArea redAreaInstance;
+	// 몬스터 이동구역 가지는 객체
+	private BluePath bluePathInstance;
+	private RedPath redPathInstance;
+	// 제한 구역 가지는 객체
+	private RestrictArea restrictAreaInstance;
+	// 포탑 위치 저장하는 리스트
+	List<Point> turrets = new ArrayList<>();
+
+	// ...
+
+	public GamePanel(RandomDefence context, String nickname, Socket socket, ObjectOutputStream objOs,
+			ObjectInputStream objIs, long roomNum, TEAM team) {
 		this.context = context;
 		this.socket = socket;
 		this.objOs = objOs;
 		this.objIs = objIs;
 		this.roomNum = roomNum;
+		this.team = team;
+
+		// 추가중 ..
+		blueAreaInstance = BlueArea.getInstance();
+		redAreaInstance = RedArea.getInstance();
+
+		bluePathInstance = BluePath.getInstance();
+		redPathInstance = RedPath.getInstance();
+
+		restrictAreaInstance = RestrictArea.getInstance();
+		// ..
 
 		System.out.println("GamePanel 입장");
 		context.setSize(1000, 1000);
 //        setPreferredSize(new Dimension(1000, 1000));
 //        context.pack();
 		setLayout(new BorderLayout());
-		
-		for(int i=0;i<1000;i+=50) {
-			for(int j=0;j<1000;j+=50) {
-				Point p = new Point(j,i);
+
+		for (int i = 0; i < 1000; i += 50) {
+			for (int j = 0; j < 1000; j += 50) {
+				Point p = new Point(j, i);
 				allPoints.add(p);
 			}
 		}
@@ -104,7 +138,7 @@ public class GamePanel extends JPanel {
 				add(allPoints.get(186));
 				add(allPoints.get(187));
 				add(allPoints.get(188));
-				
+
 				// 아랫 부분
 				add(allPoints.get(201));
 				add(allPoints.get(202));
@@ -115,7 +149,6 @@ public class GamePanel extends JPanel {
 				add(allPoints.get(207));
 				add(allPoints.get(208));
 
-				
 				add(allPoints.get(221));
 				add(allPoints.get(229));
 				add(allPoints.get(241));
@@ -130,8 +163,7 @@ public class GamePanel extends JPanel {
 				add(allPoints.get(329));
 				add(allPoints.get(341));
 				add(allPoints.get(349));
-				
-				
+
 				add(allPoints.get(362));
 				add(allPoints.get(363));
 				add(allPoints.get(364));
@@ -140,7 +172,7 @@ public class GamePanel extends JPanel {
 				add(allPoints.get(367));
 				add(allPoints.get(368));
 				add(allPoints.get(369));
-				
+
 			}
 		};
 		bluePath = new ArrayList<Point>() {
@@ -176,7 +208,7 @@ public class GamePanel extends JPanel {
 				add(allPoints.get(196));
 				add(allPoints.get(197));
 				add(allPoints.get(198));
-				
+
 				// 아랫 부분
 				add(allPoints.get(211));
 				add(allPoints.get(212));
@@ -201,8 +233,7 @@ public class GamePanel extends JPanel {
 				add(allPoints.get(338));
 				add(allPoints.get(350));
 				add(allPoints.get(358));
-				
-				
+
 				add(allPoints.get(370));
 				add(allPoints.get(371));
 				add(allPoints.get(372));
@@ -211,15 +242,15 @@ public class GamePanel extends JPanel {
 				add(allPoints.get(375));
 				add(allPoints.get(376));
 				add(allPoints.get(377));
-				
+
 			}
 		};
-		System.out.println("좌표 리스트 크기: "+allPoints.size());
-		System.out.println("좌표 리스트 마지막: "+ allPoints.get(399));
+		System.out.println("좌표 리스트 크기: " + allPoints.size());
+		System.out.println("좌표 리스트 마지막: " + allPoints.get(399));
 //		for(Point p: allPoints) {
 //			System.out.println("좌표: " + p);
 //		}
-		
+
 		try {
 			grassImage = ImageIO.read(getClass().getResource("/Image/grass.png"));
 			pathImage1 = ImageIO.read(getClass().getResource("/Image/ground1.png"));
@@ -241,26 +272,27 @@ public class GamePanel extends JPanel {
 			public void mouseClicked(MouseEvent e) {
 				Point clickPoint = e.getPoint();
 				System.out.println("클릭: " + clickPoint);
-				
+
 				// 클릭 point의 타일 좌상단 구석 계산
 				int tileSize = 50;
 				int tileX = (clickPoint.x / tileSize) * tileSize;
 				int tileY = (clickPoint.y / tileSize) * tileSize;
-
 				Point turretPoint = new Point(tileX, tileY);
+				
 //				Rectangle turretRect = new Rectangle(tileX, tileY, tileSize, tileSize);
-				
-				// 서버에 포탑 배치 요청
-				sendTurretRequest(turretPoint);
-				
-				// 잔디 타일 위를 클릭했는지 확인하고 포탑 위치 추가
-				if (isGrassTile(clickPoint)) {
-					// 서버에 포탑 배치 요청
-					sendTurretRequest(turretPoint);
+
+				// 포탑 설치 가능 구역 클릭 시
+				if (!isTurretPresent(turretPoint)&&isValidTurretPlacement(turretPoint, team)) {
+					// 서버에 포탑 배치 요청	
+					sendTurretPlacementRequest(turretPoint);
+				}
+				// 이미 설치된 포탑 클릭 시 && 업그레이드 가능한지
+				else if(isTurretPresent(turretPoint)&&isValidUpgradeTurret(turretPoint)) {
+					// 서버에 포탑 업그레이드 요청
+					sendTurretUpgradeRequest(turretPoint);
 				}
 			}
 
-			
 		});
 
 		try {
@@ -271,29 +303,93 @@ public class GamePanel extends JPanel {
 		}
 		setVisible(true);
 	}
-	// 서버에서 사용할 코드(미리 적어놓음)
-	public void handleTurretRequest(Point turretPoint) {
-		
+
+	// 포탑이 이미 설치되어 있는지 확인
+	private boolean isTurretPresent(Point turretPoint) {
+		// List<Point> turrets 에 turretPoint가 포함되어 있는지 확인
+		return turrets.contains(turretPoint);
 	}
-	// 서버에 포탑 배치 요청 보내기
-	private void sendTurretRequest(Point turretPoint) {
-		// TODO Auto-generated method stub
-		
+	
+	// 포탑 업그레이드가 유효한지 확인 - TODO
+	private boolean isValidUpgradeTurret(Point turretPoint) {
+	    // 해당 포탑이 업그레이드 가능한 상태인지 (예: 충분한 자원이 있는지, 업그레이드 최대 레벨이 아닌지 등) 확인
+	    // 이 예제에서는 단순히 true를 반환하였으나, 실제 게임 로직에 따라 구현 필요
+	    return true; // 실제 게임 로직에 맞게 구현
 	}
+	// 포탑 배치가 유효한지 확인
+	private boolean isValidTurretPlacement(Point turretPoint, TEAM team) {
+		return isWithinTeamArea(turretPoint, team) && !isMonsterPathArea(turretPoint) && !isRestrictedArea(turretPoint);
+	}
+
+	// 팀 구역(잔디) 내에 있는지 확인(잔디)
+	private boolean isWithinTeamArea(Point turretPoint, TEAM team) {
+		// 1. 내 팀에 따라 팀구역 List<Point> 가져오기
+		// 2. 클릭한 좌표가 팀구역에 포함되어 있는지 확인
+		List<Point> teamArea = (team == TEAM.RED) ? redAreaInstance.getRedArea() : blueAreaInstance.getBlueArea();
+		return teamArea.contains(turretPoint);
+	}
+
+	// 몬스터 통로인지 확인
+	private boolean isMonsterPathArea(Point turretPoint) {
+		// 1. 모든 몬스터 통로를 가져온다.
+		// 2. 클릭한 좌표가 몬스터 통로에 포함하는지 확인한다.
+		List<Point> paths = new ArrayList<>();
+		paths.addAll(bluePathInstance.getBlueDirection1());
+		paths.addAll(bluePathInstance.getBlueDirection2());
+		paths.addAll(bluePathInstance.getBlueDirection3());
+		paths.addAll(bluePathInstance.getBlueDirection4());
+		paths.addAll(redPathInstance.getredDirection1());
+		paths.addAll(redPathInstance.getredDirection2());
+		paths.addAll(redPathInstance.getredDirection3());
+		paths.addAll(redPathInstance.getredDirection4());
+		return paths.contains(turretPoint);
+	}
+
+	private boolean isRestrictedArea(Point turretPoint) {
+		// 1. 금지구역(빈공간, 깃발, 스포너) 가져온다.
+		// 2. 클릭한 좌표가 제한구역에 포함되는지 확인한다.
+		List<Point> restrictArea = restrictAreaInstance.getRestrictArea();
+		return restrictArea.contains(turretPoint);
+	}
+	
+	// 서버에 포탑 설치 요청을 보내는 메서드
+	private void sendTurretPlacementRequest(Point turretPoint) {
+	    // 서버에 포탑 설치 요청을 보내는 로직 구현
+	}
+
+	// 서버에 포탑 업그레이드 요청을 보내는 메서드
+	private void sendTurretUpgradeRequest(Point turretPoint) {
+	    // 서버에 포탑 업그레이드 요청을 보내는 로직 구현
+	}
+	// 포탑 배치 가능 영역인지 확인
+//	protected boolean isTurretPlacementArea(Point turretPoint) {
+//		if(team == TEAM.RED) {
+//			return isWithinRedArea(turretPoint);
+//		} else if(team == TEAM.BLUE) {
+//			return isWithinRedArea(turretPoint);
+//		}
+//		return false;
+//	}
+//	private boolean isWithinRedArea(Point turretPoint) {
+//		// TODO Auto-generated method stub
+//		return false;
+//	}
+//
+//	// 서버에서 사용할 코드(미리 적어놓음)
+//	public void handleTurretRequest(Point turretPoint) {
+//
+//	}
+//
+
+
 	// 서버 응답 처리
 	private void handleServerResponse(Object response) {
 		// 1. 서버로부터 응답을 받는다
 		// 2. 응답받은 것에서 turret의 Position을 꺼낸다
 		// 3. turrets에 받아온 turret의 Position을 추가한다.
 		// 4. repaint() 호출하여 다시 그린다.
-		
+
 		repaint();
-	}
-	// 클릭한 위치가 잔디 타일 위인지 확인하는 메소드
-	private boolean isGrassTile(Point clickPoint) {
-		// 임시로 잔디 타일이라고 가정하고 true 반환
-		// 실제로는 잔디 타일 위치를 계산하여 확인해야 함.
-		return true;
 	}
 
 	// 1. 초기에 불려짐
@@ -308,7 +404,7 @@ public class GamePanel extends JPanel {
 		drawSpawner(g);
 		drawPath_red(g);
 		drawPath_blue(g);
-		
+
 		// 포탑 위치에 포탑 이미지 그리기
 		for (Point turret : turrets) {
 			g.drawImage(turret1Image, turret.x, turret.y, this);
@@ -318,7 +414,7 @@ public class GamePanel extends JPanel {
 
 	private void drawPath_red(Graphics g) {
 		if (pathImage1 != null) {
-			
+
 			int pathWidth = pathImage1.getWidth(this);
 			int pathHeight = pathImage1.getHeight(this);
 //			for(int i=22;i<=29;i++) {
@@ -345,22 +441,22 @@ public class GamePanel extends JPanel {
 //			for(int i=229;i<=349;i+=20) {
 //				g.drawImage(pathImage1, allPoints.get(i).x, allPoints.get(i).y, this);
 //			}
-			for(Point p: redPath) {
+			for (Point p : redPath) {
 				g.drawImage(pathImage1, p.x, p.y, this);
 			}
 		}
 	}
+
 	private void drawPath_blue(Graphics g) {
 		if (pathImage2 != null) {
 			int pathWidth = pathImage2.getWidth(this);
 			int pathHeight = pathImage2.getHeight(this);
-			for(Point p: bluePath) {
+			for (Point p : bluePath) {
 				g.drawImage(pathImage2, p.x, p.y, this);
 			}
 		}
-		
-	}
 
+	}
 
 	private void drawSpawner(Graphics g) {
 		if (spawnerImage != null) {
