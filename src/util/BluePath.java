@@ -7,12 +7,7 @@ import java.util.List;
 public class BluePath extends Path {
 	private static BluePath bluePath;
 	private BluePath() {
-		for(int i=0;i<1000;i+=50) {
-			for(int j=0;j<1000;j+=50) {
-				Point p = new Point(j,i);
-				allPoints.add(p);
-			}
-		}
+		super();
 		Direction1 = new ArrayList<Point>() {
 			{
 				add(allPoints.get(170));
