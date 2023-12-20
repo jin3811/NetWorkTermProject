@@ -68,10 +68,15 @@ public class GamePanel extends JPanel {
 	// 제한 구역 가지는 객체
 	private RestrictArea restrictAreaInstance;
 	// 포탑 위치 저장하는 리스트
-	List<Point> turrets = new ArrayList<>();
-
+	List<Turret> turrets = new ArrayList<>();
+//	List<Point> turrets = new ArrayList<>();
+	// 포탑 레벨 2 위치 저장하는 리스트
+//	List<Point> turrets2 = new ArrayList<>();
+	// 몬스터 위치 저장하는 리스트
+	List<Point> monsters = new ArrayList<>();
 	// 클라이언트단 골드
 	private int gold;
+	private static final int MAX_LEVEL = 3;
 	// ...
 
 	public GamePanel(RandomDefence context, String nickname, Socket socket, ObjectOutputStream objOs,
@@ -91,6 +96,7 @@ public class GamePanel extends JPanel {
 		redPathInstance = RedPath.getInstance();
 
 		restrictAreaInstance = RestrictArea.getInstance();
+		
 		// ..
 
 		System.out.println("GamePanel 입장");
@@ -247,9 +253,6 @@ public class GamePanel extends JPanel {
 		};
 		System.out.println("좌표 리스트 크기: " + allPoints.size());
 		System.out.println("좌표 리스트 마지막: " + allPoints.get(399));
-//		for(Point p: allPoints) {
-//			System.out.println("좌표: " + p);
-//		}
 
 		try {
 			grassImage = ImageIO.read(getClass().getResource("/Image/grass.png"));
@@ -279,19 +282,44 @@ public class GamePanel extends JPanel {
 				int tileY = (clickPoint.y / tileSize) * tileSize;
 				Point turretPoint = new Point(tileX, tileY);
 
-//				Rectangle turretRect = new Rectangle(tileX, tileY, tileSize, tileSize);
+				// 해야하는 것: 클라이언트단에서 포탑 설치 및 업그레이드를 한 후 해당 정보를 서버로 전송한다.
+				// 초기 설정: 내가 배정된 팀의 잔디 구역(포탑 구역)에 0레벨 포탑 설치한다(Turret) - 이 경우에는 잔디를 그려준다.
+				// 해당 팀의 잔디 구역(포탑 구역)을 클릭하면 메서드를 이용해서 포탑의 레벨을 올린다(물론 돈이 있고, 최대 레벨이 아니면)
+				// 포탑의 레벨이 1레벨 이상이면 그때부터 내가 배정된 팀의 잔디구역에 포탑 이미지를 그릴 수 있도록 한다.
+				// 그럼 필요한 것:
+				// 클릭한 구역이 내 구역인지 확인 && 몬스터 통로 구역이 아님을 확인 && 설치 불가 구역이 아님을 확인
 
-				// 포탑 설치 가능 구역 클릭 시
-				if (!isTurretPresent(turretPoint) && isValidTurretPlacement(turretPoint, team)) {
-					// 서버에 포탑 배치 요청
-					sendTurretPlacementRequest(turretPoint);
+				// 포탑 설치 가능 구역인지 확인(내 구역인지, 몬스터 통로 아닌지, 제한 구역 아닌지)
+				if(isValidTurretPlacement(turretPoint, team)) {
+					// 클릭된 위치의 터렛을 가져옴(몇 레벨이든 포탈 설치 가능 구역 위치엔 터렛이 존재함)
+					Turret existingTurret = getTurretAtPoint(turretPoint);
+					// 업그레이드가 가능한지 확인 - 가능하면 여기서 골드 차감 진행됨.
+					if(isCanUpgrade(existingTurret)) {
+						// 포탑 업그레이드 실행
+						existingTurret.upgrade();
+						// 포탑 정보 서버로 전송
+						if(team == TEAM.RED) {
+							sendMessageToServer(MODE.RED_TURRET_UPDATE_MOD, turrets);
+						}
+						else if(team == TEAM.BLUE) {
+							sendMessageToServer(MODE.BLUE_TURRET_UPDATE_MOD, turrets);
+						}
+					}
 				}
-				// 이미 설치된 포탑 클릭 시 && 업그레이드 가능한지
-				else if (isTurretPresent(turretPoint) && isValidUpgradeTurret(turretPoint)) {
-					// 서버에 포탑 업그레이드 요청
-					sendTurretUpgradeRequest(turretPoint);
-				}
+//				// 포탑 설치 가능 구역 클릭 시
+//				if (!isTurretPresent(turretPoint) && isValidTurretPlacement(turretPoint, team)) {
+//					// 서버에 포탑 배치 요청
+//					sendTurretPlacementRequest(turretPoint);
+//				}
+//				// 이미 설치된 포탑 클릭 시 && 업그레이드 가능한지
+//				else if (isTurretPresent(turretPoint) && isValidUpgradeTurret(turretPoint)) {
+//					// 포탑 업그레이드 하고
+//					// 서버에 알림
+//
+//				}
 			}
+
+			
 
 		});
 
@@ -302,28 +330,64 @@ public class GamePanel extends JPanel {
 			throw new RuntimeException(e);
 		}
 		setVisible(true);
+		initTurrets();
 	}
-
-	// 포탑이 이미 설치되어 있는지 확인
-	private boolean isTurretPresent(Point turretPoint) {
-		// List<Point> turrets 에 turretPoint가 포함되어 있는지 확인
-		return turrets.contains(turretPoint);
+	// 서버에 객체 전송
+	private void sendMessageToServer(MODE mode, Object payload) {
+		// TODO Auto-generated method stub
+		try {
+	    	if(objOs!= null) {
+	    		objOs.writeObject(new MOD(mode, payload));
+	    		objOs.flush();
+	    	}
+	    } catch (IOException ex) {
+	        ex.printStackTrace();
+	    }
+		
 	}
-
-	// 포탑 업그레이드가 유효한지 확인 - TODO
-	private boolean isValidUpgradeTurret(Point turretPoint) {
-		// 해당 포탑이 업그레이드 가능한 상태인지 (예: 충분한 자원이 있는지, 업그레이드 최대 레벨이 아닌지 등) 확인
-		// 이 예제에서는 단순히 true를 반환하였으나, 실제 게임 로직에 따라 구현 필요
-		// 1. 골드가 일정 이상인가
-		// 2. 업그레이드 최대 레벨보다 낮은가
-		return true; // 실제 게임 로직에 맞게 구현
+	// 현재 클릭된 위치의 터렛이 업그레이드 가능한지 확인
+	//  
+	private boolean isCanUpgrade(Turret existingTurret) {
+		int level = existingTurret.getLevel();
+		
+		if(level>=3) { // 3레벨이면 최대레벨이므로 false
+			return false;
+		}
+		
+		if(level == 0) { // 0렙이면 100골드 차감
+			if(gold >= 100) {
+				gold -= 100;
+				return true;
+			}
+			return false;
+		}else if(level == 1) { // 1렙이면 300골드 차감
+			if(gold >= 300) {
+				gold -= 300;
+				return true;
+			}
+			return false;
+		}else if(level == 2) { // 2렙이면 500골드 차감
+			if(gold>=500) {
+				gold -= 500;
+				return true;
+			}
+			return false;
+		}
+		return false;
 	}
-
+	// 클릭된 위치의 터렛을 가져온다.
+	private Turret getTurretAtPoint(Point point) {
+	    for (Turret turret : turrets) {
+	        if (turret.getPoint().equals(point)) {
+	            return turret;
+	        }
+	    }
+	    return null;
+	}
 	// 포탑 배치가 유효한지 확인
 	private boolean isValidTurretPlacement(Point turretPoint, TEAM team) {
 		return isWithinTeamArea(turretPoint, team) && !isMonsterPathArea(turretPoint) && !isRestrictedArea(turretPoint);
 	}
-
 	// 팀 구역(잔디) 내에 있는지 확인(잔디)
 	private boolean isWithinTeamArea(Point turretPoint, TEAM team) {
 		// 1. 내 팀에 따라 팀구역 List<Point> 가져오기
@@ -331,7 +395,6 @@ public class GamePanel extends JPanel {
 		List<Point> teamArea = (team == TEAM.RED) ? redAreaInstance.getRedArea() : blueAreaInstance.getBlueArea();
 		return teamArea.contains(turretPoint);
 	}
-
 	// 몬스터 통로인지 확인
 	private boolean isMonsterPathArea(Point turretPoint) {
 		// 1. 모든 몬스터 통로를 가져온다.
@@ -347,29 +410,27 @@ public class GamePanel extends JPanel {
 		paths.addAll(redPathInstance.getredDirection4());
 		return paths.contains(turretPoint);
 	}
-
 	private boolean isRestrictedArea(Point turretPoint) {
 		// 1. 금지구역(빈공간, 깃발, 스포너) 가져온다.
 		// 2. 클릭한 좌표가 제한구역에 포함되는지 확인한다.
 		List<Point> restrictArea = restrictAreaInstance.getRestrictArea();
 		return restrictArea.contains(turretPoint);
 	}
-
-	// 서버에 포탑 설치 요청을 보내는 메서드
-	private void sendTurretPlacementRequest(Point turretPoint) {
-		// 서버에 포탑 설치 요청을 보내는 로직 구현
+		
+	// 게임 시작시 포탑 설정(0레벨)
+	private void initTurrets() {
+		List<Point> teamArea = (team == TEAM.RED) ? redAreaInstance.getRedArea() : blueAreaInstance.getBlueArea();
+		for (Point point : teamArea) {
+			Turret turret = new Turret(point, team);
+			turrets.add(turret);
+		}
 	}
 
-	// 서버에 포탑 업그레이드 요청을 보내는 메서드
-	private void sendTurretUpgradeRequest(Point turretPoint) {
-		// 서버에 포탑 업그레이드 요청을 보내는 로직 구현
-	}
-
-	// 서버로부터 포탑의 위치 정보를 받음
-	private void receiveTurretDataFromServer() {
-		// 서버로부터 포탑 데이터를 수신하는 로직
-		// 예를 들어, 서버로부터 받은 포탑 위치 데이터를 turrets 리스트에 추가하거나 업데이트
-	}
+//	// 서버로부터 포탑의 위치 정보를 받음
+//	private void receiveTurretDataFromServer() {
+//		// 서버로부터 포탑 데이터를 수신하는 로직
+//		// 예를 들어, 서버로부터 받은 포탑 위치 데이터를 turrets 리스트에 추가하거나 업데이트
+//	}
 
 	// 서버 응답 처리
 	private void handleServerResponse(Object response) {
@@ -387,18 +448,50 @@ public class GamePanel extends JPanel {
 	protected void paintComponent(Graphics g) {
 		super.paintComponent(g);
 		// 타일맵 : 잔디
-		drawGrassBackground(g);
-		drawRedTeam(g);
-		drawBlueTeam(g);
-		drawSpawner(g);
-		drawPath_red(g);
-		drawPath_blue(g);
+		drawGrassBackground(g); // 잔디 구역
+		drawRedTeam(g); // 레드팀 깃발
+		drawBlueTeam(g); // 블루팀 깃발
+		drawSpawner(g); // 스포너
+		drawPath_red(g); // 레드팀 몬스터 통로
+		drawPath_blue(g); // 블루팀 몬스터 통로
 
-		// 포탑 위치에 포탑 이미지 그리기
-		for (Point turret : turrets) {
-			g.drawImage(turret1Image, turret.x, turret.y, this);
+		// List<Point> turrets의 모든 Point에 포탑 이미지 그리기
+//		for (Point turret : turrets) {
+//			g.drawImage(turret1Image, turret.x, turret.y, this);
+//		}
+		// List<Point> turrets2의 모든 Point에 포탑2(업그레이드) 이미지 그리기
+//		for (Point turret : turrets2) {
+//			g.drawImage(turret1Image, turret.x, turret.y, this);
+//		}
+		
+		// List<Turret> turrets의 모든 Point에 포탑 이미지 그리기
+		for (Turret turret : turrets) {
+			if (turret.getLevel() == 0) { // 포탑 레벨이 0 -> 잔디 그리기
+				g.drawImage(grassImage, turret.getPoint().x, turret.getPoint().y, this);
+			} else {
+				Image turretImage = getTurretImagByLevel(turret.getLevel());
+				g.drawImage(turretImage, turret.getPoint().x, turret.getPoint().y, this);
+			}
 		}
 
+		// List<Point> monsters의 모든 Point에 몬스터 이미지 그리기
+		for (Point monster : monsters) {
+			g.drawImage(monsterImage, monster.x, monster.y, this);
+		}
+	}
+
+	// 포탑 레벨에 따른 다른 터렛 이미지 반환
+	private Image getTurretImagByLevel(int level) {
+		switch (level) {
+			case 1:
+				return turret1Image;
+			case 2:
+				return turret2Image;
+//			case 3:
+//				return turret3Image;
+			default:
+				return grassImage;
+		}
 	}
 
 	private void drawPath_red(Graphics g) {
@@ -482,18 +575,22 @@ public class GamePanel extends JPanel {
 					MODE mode = packet.getMode();
 					
 					switch(mode) {
-						// 레드팀 터렛 그리기
-						case RED_TURRET_MOD:
+						// 터렛 그리기
+						case PNT_TURRET_MOD:
+							// 1. payload에 터렛 위치 정보가 있을 것.
+							
+							
+							// 2. payload의 위치 정보를 꺼낸다.
+							
+							// 3. 터렛의 위치정보를 업데이트 한다.
+							repaint();
 							break;
-						// 블루팀 터렛 그리기
-						case BLUE_TURRET_MOD:
+						// 몬스터 그리기
+						case PNT_MONSTER_MOD:
+							
+							repaint();
 							break;
-						// 레드팀 몬스터 그리기
-						case RED_MONSTER_MOD:
-							break;
-						// 블루팀 몬스터 그리기
-						case BLUE_MONSTER_MOD:
-							break;
+						
 					}
 					
 					
@@ -501,6 +598,22 @@ public class GamePanel extends JPanel {
 			
 			}catch (Exception e) {
 				e.printStackTrace();
+			}
+		}
+
+		// 터렛 위치 업데이트하는 메서드
+		private void updateTurretLocation(Point newTurretLocation) {
+			// 중복된 터렛 위치가 없는 경우 추가
+			if (!turrets.contains(newTurretLocation)) {
+				turrets.add(newTurretLocation);
+			}
+		}
+
+		// 몬스터 위치 업데이트하는 메서드
+		private void updateMonsterLocation(Point newMonsterLocation) {
+			// 중복된 몬스터 위치가 없는 경우 추가
+			if (!monsters.contains(newMonsterLocation)) {
+				monsters.add(newMonsterLocation);
 			}
 		}
 	}
