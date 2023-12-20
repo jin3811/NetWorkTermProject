@@ -400,14 +400,14 @@ public class GamePanel extends JPanel {
 		// 1. 모든 몬스터 통로를 가져온다.
 		// 2. 클릭한 좌표가 몬스터 통로에 포함하는지 확인한다.
 		List<Point> paths = new ArrayList<>();
-		paths.addAll(bluePathInstance.getBlueDirection1());
-		paths.addAll(bluePathInstance.getBlueDirection2());
-		paths.addAll(bluePathInstance.getBlueDirection3());
-		paths.addAll(bluePathInstance.getBlueDirection4());
-		paths.addAll(redPathInstance.getredDirection1());
-		paths.addAll(redPathInstance.getredDirection2());
-		paths.addAll(redPathInstance.getredDirection3());
-		paths.addAll(redPathInstance.getredDirection4());
+		paths.addAll(bluePathInstance.getDirection1());
+		paths.addAll(bluePathInstance.getDirection2());
+		paths.addAll(bluePathInstance.getDirection3());
+		paths.addAll(bluePathInstance.getDirection4());
+		paths.addAll(redPathInstance.getDirection1());
+		paths.addAll(redPathInstance.getDirection2());
+		paths.addAll(redPathInstance.getDirection3());
+		paths.addAll(redPathInstance.getDirection4());
 		return paths.contains(turretPoint);
 	}
 	private boolean isRestrictedArea(Point turretPoint) {
@@ -578,7 +578,6 @@ public class GamePanel extends JPanel {
 						// 터렛 그리기
 						case PNT_TURRET_MOD:
 							// 1. payload에 터렛 위치 정보가 있을 것.
-							
 							
 							// 2. payload의 위치 정보를 꺼낸다.
 							
