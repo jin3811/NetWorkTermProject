@@ -12,4 +12,6 @@ public enum MODE {
     PNT_TURRET_MOD, // 클라야 터렛 그려라
     PNT_MONSTER_MOD, // 클라야 몬스터 그려라
     TURRET_UPDATE_MOD, // 서버야 터렛 업데이트 했다
+    GAME_WIN_MOD, // 니가 이김
+    GAME_LOSE_MOD, // 니가 짐
 }

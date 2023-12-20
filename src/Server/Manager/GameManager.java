@@ -39,11 +39,11 @@ public class GameManager {
         games.get(roomNum).start();
     }
 
-    private class Player {
+    public class Player {
         protected UserService user;
         protected int gold;
         protected int life;
-        protected List<MonsterPosPair> monsters = new ArrayList<>();
+        protected final List<MonsterPosPair> monsters = new CopyOnWriteArrayList<>();
         protected List<Turret> turrets = new CopyOnWriteArrayList<>();
         private static final double TURRET_RANGE = 300; // 이 값은 게임의 실제 단위에 맞춰 조정해야 함
 
@@ -56,7 +56,11 @@ public class GameManager {
         public void decreaseLife() {
             life -= 1;
         }
-        private Point getPoint(int idx, Point point, Object path){
+
+        public int getLife() {
+            return life;
+        }
+        private Point getPoint(int idx, Point point, Object path) throws IndexOutOfBoundsException {
             Point genPoint = null;
             Path p = (Path)path;
             switch (idx) {
@@ -95,10 +99,6 @@ public class GameManager {
                     catch(NullPointerException e) {
                         genPoint = p.getDirection4().get(0);
                     }
-                    catch (IndexOutOfBoundsException e) {
-                        // 인덱스 벗어났다는건 끝지점에 왔다는 뜻일거고
-                        // 그럼 깎아야 하나
-                    }
                 }
             }
             return genPoint;
@@ -106,8 +106,16 @@ public class GameManager {
 
         public Vector<MonsterPosPair> monsterProcess(Object path) {
             // 기존의 몹들을 한칸씩 이동시킨다
-            for (MonsterPosPair m : monsters) {
-                m.monster.setPoint(getPoint(m.idx, m.monster.getPoint(), path));
+            synchronized(monsters) {
+                for (MonsterPosPair m : monsters) {
+
+                    try {
+                        m.monster.setPoint(getPoint(m.idx, m.monster.getPoint(), path));
+                    } catch (IndexOutOfBoundsException e) {
+                        decreaseLife();
+                        monsters.remove(m);
+                    }
+                }
             }
 
             // 새로운 몹을 생성한 후, 몹 리스트에 넣는다
@@ -165,23 +173,28 @@ public class GameManager {
             // 몬스터가 터렛의 사정거리 내에 있으면 반환
             return closestDistance <= TURRET_RANGE ? closestMonster : null;
         }
+
+        public void updateTurret(List<Turret> new_turrets) {
+            this.turrets.clear();
+            this.turrets.addAll(new_turrets);
+        }
     }
 
-    private class GameSession extends Thread {
+    public GameSession getGameRoom(long rid) {
+        return games.get(rid);
+    }
+
+    public class GameSession extends Thread {
         private Player red;
         private ObjectOutputStream redObjOs;
-        private ObjectInputStream redObjIs;
         private Player blue;
         private ObjectOutputStream blueObjOs;
-        private ObjectInputStream blueObjIs;
 
         public GameSession(Player red, Player blue) {
             this.red = red;
             this.blue = blue;
             redObjOs = red.user.getObjOutputStream();
-            redObjIs = red.user.getObjectInputStream();
             blueObjOs = blue.user.getObjOutputStream();
-            blueObjIs = blue.user.getObjectInputStream();
         }
 
         /**
@@ -196,68 +209,75 @@ public class GameManager {
          */
         @Override
         public void run() {
-            try {
-                sleep(2000);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-            Vector<MonsterPosPair> current;
-            Thread red2blue = new TurretUpdateThread(red, blueObjIs, redObjOs);
-            Thread blue2red = new TurretUpdateThread(blue, redObjIs, blueObjOs);
-            red2blue.start();
-            blue2red.start();
+            Thread monsterUpdater = new MonsterUpdateThread();
+            monsterUpdater.start();
 
-            while(true){
-                current = new Vector<>();
-                current.addAll(red.monsterProcess(redPath));
-                current.addAll(blue.monsterProcess(bluePath));
+            // 여기가 메인인데, 여기서 계속 승패판정 돌리다가, 걸리면 ㄱ둘다 인터럽트 걸고 꺼버리죠
+            while(!isGameEnd());
 
-                sendDataToPlayer(MODE.PNT_MONSTER_MOD, current);
+            monsterUpdater.interrupt(); // 게임 끝남
+
+            // 클라들한테 메세지 보내기
+            Player winner = red.getLife() == 0 ? red : blue;
+            Player losser = red == winner ? blue : red;
+
+            ObjectOutputStream winOS = winner.user.getObjOutputStream();
+            ObjectOutputStream lossOS = losser.user.getObjOutputStream();
+
+            synchronized (winOS) {
+                synchronized (lossOS) {
+                    try {
+                        winOS.writeObject(new MOD(MODE.GAME_WIN_MOD, null));
+                        lossOS.writeObject(new MOD(MODE.GAME_LOSE_MOD, null));
+
+                        winOS.flush();
+                        lossOS.flush();
+                    }
+                    catch (IOException e) {
+                        System.out.println("승패 가려졌지만 클라가 받지 못함");
+                    }
+                }
             }
+            System.out.println("게임 끝");
         }
 
-        private void sendDataToPlayer(MODE mode, Object payload) {
-            try{
-                redObjOs.writeObject(new MOD(mode, payload));
-                blueObjOs.writeObject(new MOD(mode, payload));
-
-                redObjOs.flush();
-                blueObjOs.flush();
-            }
-            catch (Exception e) {
-                System.out.println("데이터 전송 실패");
-            }
+        public boolean isGameEnd() {
+            return red.getLife() == 0 || blue.getLife() == 0;
+        }
+        public Player getPlayer(int uid) {
+            return red.user.getUserID() == uid ? red : blue;
         }
 
-        // red, blue 클라에서 날라오는 터렛 업데이트 요청을 처리함
-        private class TurretUpdateThread extends Thread {
-            private Player updateTarget; // 업데이트한 객체
-            private ObjectInputStream is; // 한테서 받을 is
-            private ObjectOutputStream os; // 업데이트 받을 객체의 os
-            public TurretUpdateThread(Player updateTarget, ObjectInputStream is, ObjectOutputStream os) {
-                this.updateTarget = updateTarget;
-                this.is = is;
-                this.os = os;
-            }
+        private class MonsterUpdateThread extends Thread {
 
             @Override
             public void run() {
-                while(true) {
-                    try {
-                        MOD mod = (MOD)is.readObject();
-                        if (mod.getMode() == MODE.TURRET_UPDATE_MOD) {
-                            // 자기 터렛 정보를 업데이트한다.
-                            updateTarget.turrets.clear();
-                            updateTarget.turrets.addAll((List<Turret>)mod.getPayload());
+                Vector<MonsterPosPair> current;
 
-                            // 상대한테 알려줘서 그리도록 한다.
-                            mod.setMode(MODE.PNT_TURRET_MOD);
-                            os.writeObject(mod);
-                            os.flush();
+                try {
+                    sleep(2000);
+                    while(true){
+                        current = new Vector<>();
+                        current.addAll(red.monsterProcess(redPath));
+                        current.addAll(blue.monsterProcess(bluePath));
+
+                        synchronized (redObjOs) {
+                            synchronized (blueObjOs) {
+                                try {
+                                    redObjOs.writeObject(new MOD(MODE.PNT_MONSTER_MOD, new Vector<MonsterPosPair>(current)));
+                                    blueObjOs.writeObject(new MOD(MODE.PNT_MONSTER_MOD, new Vector<MonsterPosPair>(current)));
+
+                                    redObjOs.flush();
+                                    blueObjOs.flush();
+                                } catch (Exception e) {
+                                    System.out.println("몬스터 데이터 전송 실패");
+                                }
+                            }
                         }
-                    } catch (Exception e) {
-                        System.out.println("------- 터렛 받아오기 실패");
                     }
+                } catch (InterruptedException e){
+                    System.out.println("승패 판정으로 인한 몹 업뎃 중단");
+                    throw new RuntimeException(e);
                 }
             }
         }

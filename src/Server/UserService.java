@@ -1,5 +1,7 @@
 package Server;
 
+import Component.Turret;
+import Server.Manager.GameManager;
 import util.*;
 
 import java.util.*;
@@ -51,6 +53,7 @@ public class UserService extends Thread implements Serializable{
     @Override
     public void run() { // 클라이언트에서 날린 요청을 계속 받고, 보내는 기능 수행
         Room r = null;
+        long roomNum = -1;
         while(true) {
             try {
                 MOD receive = (MOD)objIs.readObject();
@@ -72,9 +75,31 @@ public class UserService extends Thread implements Serializable{
                         System.out.println("id : " + id + " 방 참가 요청");
                     }
                     case GAME_START_MOD -> {
-                        long roomNum = (long)receive.getPayload();
+                        roomNum = (long)receive.getPayload();
                         this.server.gameManager.addGame(r, roomNum);
                         this.server.gameManager.startGame(roomNum);
+                    }
+                    case TURRET_UPDATE_MOD -> {
+                        System.out.println("들어옴");
+                        // 일단 상대를 알아온다
+                        UserService enemy = this.server.userManager.getUserbyId(r.getEnemy(this.id));
+
+                        // 게임 세션도 가져온
+                        GameManager.GameSession gameRoom = this.server.gameManager.getGameRoom(roomNum);
+
+                        // 터렛 가져오기
+                        List<Turret> updateTurret = (List<Turret>)receive.getPayload();
+
+                        // 자기 정보를 업데이트 한다.
+                        GameManager.Player myPlayerInfo = gameRoom.getPlayer(this.id);
+                        myPlayerInfo.updateTurret(updateTurret);
+
+                        // 상대한테 알려줘서 그리게 한다.
+                        ObjectOutputStream enemyOS = enemy.getObjOutputStream();
+                        enemyOS.writeObject(new MOD(
+                                MODE.PNT_TURRET_MOD,
+                                updateTurret
+                        ));
                     }
                 }
             }

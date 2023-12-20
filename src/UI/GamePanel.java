@@ -306,7 +306,7 @@ public class GamePanel extends JPanel {
 						existingTurret.upgrade();
 						// 내 포탑 정보 서버로 전송
 						sendMessageToServer(MODE.TURRET_UPDATE_MOD, new ArrayList<Turret>(myTurrets));
-						
+						System.out.println(team + "업데이트 요청함");
 					}
 				}
 //				// 포탑 설치 가능 구역 클릭 시

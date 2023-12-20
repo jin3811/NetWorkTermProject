@@ -33,4 +33,8 @@ public class Room implements Serializable {
     }
 
     public int getPlayerId() { return playerId; }
+
+    public int getEnemy(int myId) {
+        return managerId == myId ? playerId : managerId;
+    }
 }
