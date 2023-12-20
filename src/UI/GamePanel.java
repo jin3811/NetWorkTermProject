@@ -4,6 +4,7 @@ import javax.imageio.ImageIO;
 import javax.naming.ldap.SortKey;
 import javax.swing.*;
 
+import Component.Monster;
 import Component.Turret;
 import Server.Room;
 import util.BlueArea;
@@ -14,6 +15,7 @@ import util.RedArea;
 import util.RedPath;
 import util.RestrictArea;
 import util.TEAM;
+import util.MonsterPosPair;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -44,6 +46,7 @@ public class GamePanel extends JPanel {
 	private Image spawnerImage;
 	private Image turret1Image;
 	private Image turret2Image;
+	private Image turret3Image;
 	private Image monsterImage;
 
 	List<Point> allPoints = new ArrayList<>();
@@ -58,7 +61,7 @@ public class GamePanel extends JPanel {
 	private TEAM team;
 
 	// 추가중..
-
+	private Thread clientReceiverThread;
 	// 포탑 설치구역 가지는 객체
 	private BlueArea blueAreaInstance;
 	private RedArea redAreaInstance;
@@ -89,6 +92,7 @@ public class GamePanel extends JPanel {
 		this.objIs = objIs;
 		this.roomNum = roomNum;
 		this.team = team;
+		this.gold = 100;
 
 		// 추가중 ..
 		blueAreaInstance = BlueArea.getInstance();
@@ -263,9 +267,10 @@ public class GamePanel extends JPanel {
 			redTeamImage = ImageIO.read(getClass().getResource("/Image/red.png"));
 			blueTeamImage = ImageIO.read(getClass().getResource("/Image/blue.png"));
 			spawnerImage = ImageIO.read(getClass().getResource("/Image/spawner.png"));
-			turret1Image = ImageIO.read(getClass().getResource("/Image/turret1.png")); // 추가 예정
-			turret2Image = ImageIO.read(getClass().getResource("/Image/turret2.png")); // 추가 예정
-			monsterImage = ImageIO.read(getClass().getResource("/Image/monster.png")); // 추가 예정
+			turret1Image = ImageIO.read(getClass().getResource("/Image/turret1.png")); 
+			turret2Image = ImageIO.read(getClass().getResource("/Image/turret2.png")); 
+			turret3Image = ImageIO.read(getClass().getResource("/Image/turret3.png")); 
+			monsterImage = ImageIO.read(getClass().getResource("/Image/monster.png"));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -328,6 +333,10 @@ public class GamePanel extends JPanel {
 			throw new RuntimeException(e);
 		}
 		setVisible(true);
+		
+		// 스레드 시작
+		clientReceiverThread = new ClientReceiver(objIs);
+		clientReceiverThread.start();
 		initTurrets();
 		
 	}
@@ -435,15 +444,15 @@ public class GamePanel extends JPanel {
 //		// 예를 들어, 서버로부터 받은 포탑 위치 데이터를 turrets 리스트에 추가하거나 업데이트
 //	}
 
-	// 서버 응답 처리
-	private void handleServerResponse(Object response) {
-		// 1. 서버로부터 응답을 받는다
-		// 2. 응답받은 것에서 turret의 Position을 꺼낸다
-		// 3. turrets에 받아온 turret의 Position을 추가 및 업데이트
-		// 4. repaint() 호출하여 다시 그린다.
-
-		repaint();
-	}
+//	// 서버 응답 처리
+//	private void handleServerResponse(Object response) {
+//		// 1. 서버로부터 응답을 받는다
+//		// 2. 응답받은 것에서 turret의 Position을 꺼낸다
+//		// 3. turrets에 받아온 turret의 Position을 추가 및 업데이트
+//		// 4. repaint() 호출하여 다시 그린다.
+//
+//		repaint();
+//	}
 
 	// 1. 초기에 불려짐
 	// 2. repaint() 호출시 불려짐
@@ -467,8 +476,17 @@ public class GamePanel extends JPanel {
 //			g.drawImage(turret1Image, turret.x, turret.y, this);
 //		}
 		
-		// List<Turret> turrets의 모든 Point에 포탑 이미지 그리기
+		// List<Turret> myTurrets의 모든 Point에 포탑 이미지 그리기
 		for (Turret turret : myTurrets) {
+			if (turret.getLevel() == 0) { // 포탑 레벨이 0 -> 잔디 그리기
+				g.drawImage(grassImage, turret.getPoint().x, turret.getPoint().y, this);
+			} else {
+				Image turretImage = getTurretImagByLevel(turret.getLevel());
+				g.drawImage(turretImage, turret.getPoint().x, turret.getPoint().y, this);
+			}
+		}
+		// List<Turret> enemyTurrets의 모든 Point에 포탑 이미지 그리기
+		for (Turret turret : enemyTurrets) {
 			if (turret.getLevel() == 0) { // 포탑 레벨이 0 -> 잔디 그리기
 				g.drawImage(grassImage, turret.getPoint().x, turret.getPoint().y, this);
 			} else {
@@ -490,8 +508,8 @@ public class GamePanel extends JPanel {
 				return turret1Image;
 			case 2:
 				return turret2Image;
-//			case 3:
-//				return turret3Image;
+			case 3:
+				return turret3Image;
 			default:
 				return grassImage;
 		}
@@ -578,11 +596,12 @@ public class GamePanel extends JPanel {
 					MODE mode = packet.getMode();
 					
 					switch(mode) {
-						// 터렛 그리기
+						// 상대 터렛 그리기
 						case PNT_TURRET_MOD:
-							// 1. 상대편 List<Turret>을 꺼낸다.
+							// 1. 상대편 List<Turret>을 꺼내 turrets에 저장
+							turrets.clear();
 							turrets = (List<Turret>) packet.getPayload();
-							// 2. 받아온 상대편 List<Turret>을 enemyTurrets에 삽입.
+							// 2. 받아온 상대편 List<Turret> turrets를 enemyTurrets에 삽입.
 							enemyTurrets.clear();
 							enemyTurrets.addAll(turrets);
 							// 3. 다시 그리기
@@ -590,7 +609,13 @@ public class GamePanel extends JPanel {
 							break;
 						// 몬스터 그리기
 						case PNT_MONSTER_MOD:
+							// 1. Vector<MonsterPosPair>을 꺼낸다
+							Vector<MonsterPosPair> monstersInfo = (Vector<MonsterPosPair>) packet.getPayload();
+							// 2. 골드 꺼낸다(몬스터 잡아 얻은)
+							gold += monstersInfo.get(0).idx;
 							
+							// 몬스터의 위치 정보 업데이트
+							updateMonsters(monstersInfo);
 							repaint();
 							break;
 						
@@ -602,8 +627,21 @@ public class GamePanel extends JPanel {
 			}catch (Exception e) {
 				e.printStackTrace();
 			}
+			
 		}
-
+		private void updateMonsters(Vector<MonsterPosPair> monstersInfo) {
+		    // monstersInfo에서 몬스터 위치 정보를 추출하여 그리기 위한 몬스터 목록을 업데이트합니다.
+		    List<Point> monsterPoints = new ArrayList<>();
+		    for (MonsterPosPair monsterPair : monstersInfo) {
+		        if (monsterPair.monster != null) {
+		            monsterPoints.add(monsterPair.monster.getPoint());
+		        }
+		    }
+		    // 이제 monsterPoints에는 모든 몬스터의 위치 정보 존재
+		    // 이 정보를 화면에 그리기 위한 monsters를 초기화 후 저장.
+		    monsters.clear();
+		    monsters.addAll(monsterPoints);
+		}
 //		// 터렛 위치 업데이트하는 메서드
 //		private void updateTurretLocation(Point newTurretLocation) {
 //			// 중복된 터렛 위치가 없는 경우 추가
