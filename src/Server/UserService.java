@@ -54,7 +54,7 @@ public class UserService extends Thread implements Serializable{
         while(true) {
             try {
                 MOD receive = (MOD)objIs.readObject();
-                System.out.println("MOD 수신함 : " + receive.toString());
+                System.out.println("uid#" + id + " - MOD 수신함 : " + receive.toString());
                 switch (receive.getMode()) {
                     case CREATE_ROOM_MOD -> {
                         r = this.server.roomMananger.createRoom((String)receive.getPayload(), id);
@@ -86,6 +86,10 @@ public class UserService extends Thread implements Serializable{
 
     public ObjectOutputStream getObjOutputStream() {
         return this.objOS;
+    }
+
+    public ObjectInputStream getObjectInputStream() {
+        return this.objIs;
     }
 
     public int getUserID() {
