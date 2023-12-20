@@ -467,8 +467,17 @@ public class GamePanel extends JPanel {
 //			g.drawImage(turret1Image, turret.x, turret.y, this);
 //		}
 		
-		// List<Turret> turrets의 모든 Point에 포탑 이미지 그리기
+		// List<Turret> myTurrets의 모든 Point에 포탑 이미지 그리기
 		for (Turret turret : myTurrets) {
+			if (turret.getLevel() == 0) { // 포탑 레벨이 0 -> 잔디 그리기
+				g.drawImage(grassImage, turret.getPoint().x, turret.getPoint().y, this);
+			} else {
+				Image turretImage = getTurretImagByLevel(turret.getLevel());
+				g.drawImage(turretImage, turret.getPoint().x, turret.getPoint().y, this);
+			}
+		}
+		// List<Turret> enemyTurrets의 모든 Point에 포탑 이미지 그리기
+		for (Turret turret : enemyTurrets) {
 			if (turret.getLevel() == 0) { // 포탑 레벨이 0 -> 잔디 그리기
 				g.drawImage(grassImage, turret.getPoint().x, turret.getPoint().y, this);
 			} else {
@@ -580,9 +589,10 @@ public class GamePanel extends JPanel {
 					switch(mode) {
 						// 터렛 그리기
 						case PNT_TURRET_MOD:
-							// 1. 상대편 List<Turret>을 꺼낸다.
+							// 1. 상대편 List<Turret>을 꺼내 turrets에 저장
+							turrets.clear();
 							turrets = (List<Turret>) packet.getPayload();
-							// 2. 받아온 상대편 List<Turret>을 enemyTurrets에 삽입.
+							// 2. 받아온 상대편 List<Turret> turrets를 enemyTurrets에 삽입.
 							enemyTurrets.clear();
 							enemyTurrets.addAll(turrets);
 							// 3. 다시 그리기
@@ -590,6 +600,7 @@ public class GamePanel extends JPanel {
 							break;
 						// 몬스터 그리기
 						case PNT_MONSTER_MOD:
+							// 1. Vector<MonsterPosPair>을 꺼낸다
 							
 							repaint();
 							break;
