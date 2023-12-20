@@ -46,6 +46,7 @@ public class GamePanel extends JPanel {
 	private Image spawnerImage;
 	private Image turret1Image;
 	private Image turret2Image;
+	private Image turret3Image;
 	private Image monsterImage;
 
 	List<Point> allPoints = new ArrayList<>();
@@ -91,6 +92,7 @@ public class GamePanel extends JPanel {
 		this.objIs = objIs;
 		this.roomNum = roomNum;
 		this.team = team;
+		this.gold = 100;
 
 		// 추가중 ..
 		blueAreaInstance = BlueArea.getInstance();
@@ -265,9 +267,10 @@ public class GamePanel extends JPanel {
 			redTeamImage = ImageIO.read(getClass().getResource("/Image/red.png"));
 			blueTeamImage = ImageIO.read(getClass().getResource("/Image/blue.png"));
 			spawnerImage = ImageIO.read(getClass().getResource("/Image/spawner.png"));
-			turret1Image = ImageIO.read(getClass().getResource("/Image/turret1.png")); // 추가 예정
-			turret2Image = ImageIO.read(getClass().getResource("/Image/turret2.png")); // 추가 예정
-			monsterImage = ImageIO.read(getClass().getResource("/Image/monster.png")); // 추가 예정
+			turret1Image = ImageIO.read(getClass().getResource("/Image/turret1.png")); 
+			turret2Image = ImageIO.read(getClass().getResource("/Image/turret2.png")); 
+			turret3Image = ImageIO.read(getClass().getResource("/Image/turret3.png")); 
+			monsterImage = ImageIO.read(getClass().getResource("/Image/monster.png"));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -441,15 +444,15 @@ public class GamePanel extends JPanel {
 //		// 예를 들어, 서버로부터 받은 포탑 위치 데이터를 turrets 리스트에 추가하거나 업데이트
 //	}
 
-	// 서버 응답 처리
-	private void handleServerResponse(Object response) {
-		// 1. 서버로부터 응답을 받는다
-		// 2. 응답받은 것에서 turret의 Position을 꺼낸다
-		// 3. turrets에 받아온 turret의 Position을 추가 및 업데이트
-		// 4. repaint() 호출하여 다시 그린다.
-
-		repaint();
-	}
+//	// 서버 응답 처리
+//	private void handleServerResponse(Object response) {
+//		// 1. 서버로부터 응답을 받는다
+//		// 2. 응답받은 것에서 turret의 Position을 꺼낸다
+//		// 3. turrets에 받아온 turret의 Position을 추가 및 업데이트
+//		// 4. repaint() 호출하여 다시 그린다.
+//
+//		repaint();
+//	}
 
 	// 1. 초기에 불려짐
 	// 2. repaint() 호출시 불려짐
@@ -505,8 +508,8 @@ public class GamePanel extends JPanel {
 				return turret1Image;
 			case 2:
 				return turret2Image;
-//			case 3:
-//				return turret3Image;
+			case 3:
+				return turret3Image;
 			default:
 				return grassImage;
 		}
@@ -593,7 +596,7 @@ public class GamePanel extends JPanel {
 					MODE mode = packet.getMode();
 					
 					switch(mode) {
-						// 터렛 그리기
+						// 상대 터렛 그리기
 						case PNT_TURRET_MOD:
 							// 1. 상대편 List<Turret>을 꺼내 turrets에 저장
 							turrets.clear();
@@ -607,7 +610,7 @@ public class GamePanel extends JPanel {
 						// 몬스터 그리기
 						case PNT_MONSTER_MOD:
 							// 1. Vector<MonsterPosPair>을 꺼낸다
-							Vector<MonsterPosPair> monstersInfo  = (Vector<MonsterPosPair>) packet.getPayload();
+							Vector<MonsterPosPair> monstersInfo = (Vector<MonsterPosPair>) packet.getPayload();
 							// 2. 골드 꺼낸다(몬스터 잡아 얻은)
 							gold += monstersInfo.get(0).idx;
 							
