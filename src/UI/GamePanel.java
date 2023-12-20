@@ -68,7 +68,9 @@ public class GamePanel extends JPanel {
 	// 제한 구역 가지는 객체
 	private RestrictArea restrictAreaInstance;
 	// 포탑 위치 저장하는 리스트
-	List<Turret> turrets = new ArrayList<>();
+	List<Turret> myTurrets = new ArrayList<>();
+	List<Turret> enemyTurrets = new ArrayList<>();
+	
 //	List<Point> turrets = new ArrayList<>();
 	// 포탑 레벨 2 위치 저장하는 리스트
 //	List<Point> turrets2 = new ArrayList<>();
@@ -295,15 +297,11 @@ public class GamePanel extends JPanel {
 					Turret existingTurret = getTurretAtPoint(turretPoint);
 					// 업그레이드가 가능한지 확인 - 가능하면 여기서 골드 차감 진행됨.
 					if(isCanUpgrade(existingTurret)) {
-						// 포탑 업그레이드 실행
+						// 내 해당 포탑 업그레이드 실행
 						existingTurret.upgrade();
-						// 포탑 정보 서버로 전송
-						if(team == TEAM.RED) {
-							sendMessageToServer(MODE.RED_TURRET_UPDATE_MOD, turrets);
-						}
-						else if(team == TEAM.BLUE) {
-							sendMessageToServer(MODE.BLUE_TURRET_UPDATE_MOD, turrets);
-						}
+						// 내 포탑 정보 서버로 전송
+						sendMessageToServer(MODE.TURRET_UPDATE_MOD, new ArrayList<Turret>(myTurrets));
+						
 					}
 				}
 //				// 포탑 설치 가능 구역 클릭 시
@@ -331,6 +329,7 @@ public class GamePanel extends JPanel {
 		}
 		setVisible(true);
 		initTurrets();
+		
 	}
 	// 서버에 객체 전송
 	private void sendMessageToServer(MODE mode, Object payload) {
@@ -377,7 +376,7 @@ public class GamePanel extends JPanel {
 	}
 	// 클릭된 위치의 터렛을 가져온다.
 	private Turret getTurretAtPoint(Point point) {
-	    for (Turret turret : turrets) {
+	    for (Turret turret : myTurrets) {
 	        if (turret.getPoint().equals(point)) {
 	            return turret;
 	        }
@@ -417,13 +416,17 @@ public class GamePanel extends JPanel {
 		return restrictArea.contains(turretPoint);
 	}
 		
-	// 게임 시작시 포탑 설정(0레벨)
+	// 게임 시작시 내 팀 모든 구역에 포탑 설정(0레벨)
 	private void initTurrets() {
+		// 내 팀구역 가져오기
 		List<Point> teamArea = (team == TEAM.RED) ? redAreaInstance.getRedArea() : blueAreaInstance.getBlueArea();
+		// 내 팀구역 Point에 Turret 설치
 		for (Point point : teamArea) {
 			Turret turret = new Turret(point, team);
-			turrets.add(turret);
+			myTurrets.add(turret);
 		}
+		// 서버에 터렛 업데이트 했다고 알리기
+		sendMessageToServer(MODE.TURRET_UPDATE_MOD, new ArrayList<Turret>(myTurrets));
 	}
 
 //	// 서버로부터 포탑의 위치 정보를 받음
@@ -465,7 +468,7 @@ public class GamePanel extends JPanel {
 //		}
 		
 		// List<Turret> turrets의 모든 Point에 포탑 이미지 그리기
-		for (Turret turret : turrets) {
+		for (Turret turret : myTurrets) {
 			if (turret.getLevel() == 0) { // 포탑 레벨이 0 -> 잔디 그리기
 				g.drawImage(grassImage, turret.getPoint().x, turret.getPoint().y, this);
 			} else {
@@ -561,7 +564,7 @@ public class GamePanel extends JPanel {
 
 	class ClientReceiver extends Thread {
 		private ObjectInputStream objIs;
-
+		private List<Turret> turrets;
 		public ClientReceiver(ObjectInputStream objIs) {
 			this.objIs = objIs;
 		}
@@ -577,11 +580,12 @@ public class GamePanel extends JPanel {
 					switch(mode) {
 						// 터렛 그리기
 						case PNT_TURRET_MOD:
-							// 1. payload에 터렛 위치 정보가 있을 것.
-							
-							// 2. payload의 위치 정보를 꺼낸다.
-							
-							// 3. 터렛의 위치정보를 업데이트 한다.
+							// 1. 상대편 List<Turret>을 꺼낸다.
+							turrets = (List<Turret>) packet.getPayload();
+							// 2. 받아온 상대편 List<Turret>을 enemyTurrets에 삽입.
+							enemyTurrets.clear();
+							enemyTurrets.addAll(turrets);
+							// 3. 다시 그리기
 							repaint();
 							break;
 						// 몬스터 그리기
@@ -600,21 +604,21 @@ public class GamePanel extends JPanel {
 			}
 		}
 
-		// 터렛 위치 업데이트하는 메서드
-		private void updateTurretLocation(Point newTurretLocation) {
-			// 중복된 터렛 위치가 없는 경우 추가
-			if (!turrets.contains(newTurretLocation)) {
-				turrets.add(newTurretLocation);
-			}
-		}
-
-		// 몬스터 위치 업데이트하는 메서드
-		private void updateMonsterLocation(Point newMonsterLocation) {
-			// 중복된 몬스터 위치가 없는 경우 추가
-			if (!monsters.contains(newMonsterLocation)) {
-				monsters.add(newMonsterLocation);
-			}
-		}
+//		// 터렛 위치 업데이트하는 메서드
+//		private void updateTurretLocation(Point newTurretLocation) {
+//			// 중복된 터렛 위치가 없는 경우 추가
+//			if (!myTurrets.contains(newTurretLocation)) {
+//				myTurrets.add(newTurretLocation);
+//			}
+//		}
+//
+//		// 몬스터 위치 업데이트하는 메서드
+//		private void updateMonsterLocation(Point newMonsterLocation) {
+//			// 중복된 몬스터 위치가 없는 경우 추가
+//			if (!monsters.contains(newMonsterLocation)) {
+//				monsters.add(newMonsterLocation);
+//			}
+//		}
 	}
 }
 //포탑 배치 가능 영역인지 확인
