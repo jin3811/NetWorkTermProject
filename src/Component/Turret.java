@@ -2,10 +2,11 @@ package Component;
 
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.io.Serializable;
 
 import util.TEAM;
 
-public class Turret {
+public class Turret implements Serializable {
 	private static final int MAX_LEVEL = 3;
 
 	private Point point;

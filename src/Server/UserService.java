@@ -80,6 +80,7 @@ public class UserService extends Thread implements Serializable{
             }
             catch (Exception e) {
                 e.printStackTrace();
+                System.exit(123);
             }
         }
     }

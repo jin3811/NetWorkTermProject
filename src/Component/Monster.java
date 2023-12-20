@@ -3,8 +3,9 @@ package Component;
 import util.MonsterPosPair;
 
 import java.awt.Point;
+import java.io.Serializable;
 
-public class Monster {
+public class Monster implements Serializable {
 	int HP;
 	Point point;
 

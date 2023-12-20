@@ -329,16 +329,16 @@ public class GamePanel extends JPanel {
 		try {
 			objOs.writeObject(new MOD(MODE.GAME_START_MOD, roomNum));
 			objOs.flush();
+			clientReceiverThread = new ClientReceiver(objIs);
+			clientReceiverThread.start();
+			initTurrets();
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
 		setVisible(true);
-		
+
 		// 스레드 시작
-		clientReceiverThread = new ClientReceiver(objIs);
-		clientReceiverThread.start();
-		initTurrets();
-		
+
 	}
 	// 서버에 객체 전송
 	private void sendMessageToServer(MODE mode, Object payload) {

@@ -95,6 +95,10 @@ public class GameManager {
                     catch(NullPointerException e) {
                         genPoint = p.getDirection4().get(0);
                     }
+                    catch (IndexOutOfBoundsException e) {
+                        // 인덱스 벗어났다는건 끝지점에 왔다는 뜻일거고
+                        // 그럼 깎아야 하나
+                    }
                 }
             }
             return genPoint;
@@ -192,6 +196,11 @@ public class GameManager {
          */
         @Override
         public void run() {
+            try {
+                sleep(2000);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
             Vector<MonsterPosPair> current;
             Thread red2blue = new TurretUpdateThread(red, blueObjIs, redObjOs);
             Thread blue2red = new TurretUpdateThread(blue, redObjIs, blueObjOs);
@@ -208,10 +217,9 @@ public class GameManager {
         }
 
         private void sendDataToPlayer(MODE mode, Object payload) {
-            MOD mod = new MOD(mode, payload);
             try{
-                redObjOs.writeObject(mod);
-                blueObjOs.writeObject(mod);
+                redObjOs.writeObject(new MOD(mode, payload));
+                blueObjOs.writeObject(new MOD(mode, payload));
 
                 redObjOs.flush();
                 blueObjOs.flush();
