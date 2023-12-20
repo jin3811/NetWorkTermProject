@@ -73,7 +73,11 @@ public class UserService extends Thread implements Serializable{
                         this.server.gameManager.startGame(roomNum);
                     }
                     case TURRET_UPDATE_MOD -> {
-                        System.out.println("들어옴");
+                        System.out.println("터렛 업뎃 들어옴");
+                        synchronized (objOS) {
+                            objOS.writeObject("asdfasdfa");
+                            objOS.flush();
+                        }
                         // 일단 상대를 알아온다
                         UserService enemy = this.server.userManager.getUserbyId(r.getEnemy(this.id));
 
@@ -85,14 +89,17 @@ public class UserService extends Thread implements Serializable{
 
                         // 자기 정보를 업데이트 한다.
                         GameManager.Player myPlayerInfo = gameRoom.getPlayer(this.id);
-                        myPlayerInfo.updateTurret(updateTurret);
+                        myPlayerInfo.updateTurret(new ArrayList<Turret>(updateTurret));
 
                         // 상대한테 알려줘서 그리게 한다.
                         ObjectOutputStream enemyOS = enemy.getObjOutputStream();
-                        enemyOS.writeObject(new MOD(
-                                MODE.PNT_TURRET_MOD,
-                                new ArrayList<Turret>(updateTurret)
-                        ));
+                        synchronized (enemyOS) {
+                            enemyOS.writeObject(new MOD(
+                                    MODE.PNT_TURRET_MOD,
+                                    new ArrayList<Turret>(updateTurret)
+                            ));
+                            enemyOS.flush();
+                        }
                     }
                 }
             }

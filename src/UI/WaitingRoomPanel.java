@@ -215,6 +215,7 @@ public class WaitingRoomPanel extends JPanel {
 		}
 		@Override
 		public void run() {
+			loadingThread.interrupt();
 			for (int i = 5 ; i >= 0; i--) {
 				stateLabel.setText(i + "초후 게임이 시작됩니다. 준비해주세요.");
 				try {
@@ -225,6 +226,9 @@ public class WaitingRoomPanel extends JPanel {
 			}
 			System.out.println("화면 전환");
 			context.transition(new GamePanel(context, nickname, socket, objOS, objIs, roomNum, myTeamColor));
+			updateRoomListThread.interrupt();
+			loadingThread.interrupt();
+			this.interrupt();
 		}
 	}
 }

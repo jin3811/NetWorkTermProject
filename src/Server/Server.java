@@ -1,13 +1,12 @@
 package Server;
 
-import Server.Manager.*;
-import util.*;
+import Server.Manager.GameManager;
+import Server.Manager.RoomMananger;
+import Server.Manager.UserManager;
 
-import java.io.*;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Vector;
 
 public class Server {
     private static final int PORT = 9999;
