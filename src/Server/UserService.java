@@ -16,8 +16,6 @@ import java.net.Socket;
  * */
 
 public class UserService extends Thread implements Serializable{
-    private InputStream is;
-    private OutputStream os;
     private ObjectInputStream objIs;
     private ObjectOutputStream objOS;
 
@@ -33,22 +31,17 @@ public class UserService extends Thread implements Serializable{
         this.id = id;
 
         try {
-            os = clientSocket.getOutputStream();
-            objOS = new ObjectOutputStream(os);
-            is = clientSocket.getInputStream();
-            objIs = new ObjectInputStream(is);
+            objOS = new ObjectOutputStream(clientSocket.getOutputStream());
+            objIs = new ObjectInputStream(clientSocket.getInputStream());
             if(objIs != null && objOS != null)
-                System.out.println("UserService dis, dos 초기화 완료");
+                System.out.println("UserService Ois, Oos 초기화 완료");
 
         }catch (Exception e) {
             // TODO: handle exception
             e.printStackTrace();
         }
     }
-    // 모든 유저에게 보내는 기능
-    public void broadCast() {
 
-    }
     // 클라이언트와 지속적으로 통신하는 부분
     @Override
     public void run() { // 클라이언트에서 날린 요청을 계속 받고, 보내는 기능 수행
@@ -98,7 +91,7 @@ public class UserService extends Thread implements Serializable{
                         ObjectOutputStream enemyOS = enemy.getObjOutputStream();
                         enemyOS.writeObject(new MOD(
                                 MODE.PNT_TURRET_MOD,
-                                updateTurret
+                                new ArrayList<Turret>(updateTurret)
                         ));
                     }
                 }
