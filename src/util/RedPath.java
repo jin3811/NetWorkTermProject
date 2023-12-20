@@ -4,21 +4,12 @@ import java.awt.Point;
 import java.util.ArrayList;
 import java.util.List;
 
-public class RedPath {
+public class RedPath extends Path {
 	private static RedPath redPath;
-	List<Point> allPoints = new ArrayList<>();
-	List<Point> redDirection1;
-	List<Point> redDirection2;
-	List<Point> redDirection3;
-	List<Point> redDirection4;
+
 	private RedPath() {
-		for(int i=0;i<1000;i+=50) {
-			for(int j=0;j<1000;j+=50) {
-				Point p = new Point(j,i);
-				allPoints.add(p);
-			}
-		}
-		redDirection1 = new ArrayList<Point>() {
+		super();
+		Direction1 = new ArrayList<Point>() {
 			{
 				add(allPoints.get(169));
 				add(allPoints.get(149));
@@ -37,7 +28,7 @@ public class RedPath {
 				add(allPoints.get(22));
 			}
 		};
-		redDirection2 = new ArrayList<Point>() {
+		Direction2 = new ArrayList<Point>() {
 			{
 				add(allPoints.get(188));
 				add(allPoints.get(187));
@@ -57,7 +48,7 @@ public class RedPath {
 				add(allPoints.get(41));
 			}
 		};
-		redDirection3 = new ArrayList<Point>() {
+		Direction3 = new ArrayList<Point>() {
 			{
 				add(allPoints.get(208));
 				add(allPoints.get(207));
@@ -77,8 +68,7 @@ public class RedPath {
 				add(allPoints.get(341));
 			}
 		};
-		
-		redDirection4 = new ArrayList<Point>() {
+		Direction4 = new ArrayList<Point>() {
 			{
 				add(allPoints.get(229));
 				add(allPoints.get(249));
@@ -106,22 +96,4 @@ public class RedPath {
         }
         return redPath;
     }
-	
-	// redDirection 리스트에 대한 getter 메소드
-    public List<Point> getredDirection1() {
-        return redDirection1;
-    }
-
-    public List<Point> getredDirection2() {
-        return redDirection2;
-    }
-
-    public List<Point> getredDirection3() {
-        return redDirection3;
-    }
-
-    public List<Point> getredDirection4() {
-        return redDirection4;
-    }
-	
 }
