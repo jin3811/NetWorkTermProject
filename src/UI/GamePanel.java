@@ -15,6 +15,7 @@ import util.RedArea;
 import util.RedPath;
 import util.RestrictArea;
 import util.TEAM;
+import util.MonsterPosPair;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -59,7 +60,7 @@ public class GamePanel extends JPanel {
 	private TEAM team;
 
 	// 추가중..
-
+	private Thread clientReceiverThread;
 	// 포탑 설치구역 가지는 객체
 	private BlueArea blueAreaInstance;
 	private RedArea redAreaInstance;
@@ -329,6 +330,10 @@ public class GamePanel extends JPanel {
 			throw new RuntimeException(e);
 		}
 		setVisible(true);
+		
+		// 스레드 시작
+		clientReceiverThread = new ClientReceiver(objIs);
+		clientReceiverThread.start();
 		initTurrets();
 		
 	}
@@ -602,9 +607,12 @@ public class GamePanel extends JPanel {
 						// 몬스터 그리기
 						case PNT_MONSTER_MOD:
 							// 1. Vector<MonsterPosPair>을 꺼낸다
-							Vector<MonsterPosPair> v = (Vector<MonsterPosPair>) packet.getPayload();
-							// 2. 골드 꺼낸다
-							gold = v.get(0)
+							Vector<MonsterPosPair> monstersInfo  = (Vector<MonsterPosPair>) packet.getPayload();
+							// 2. 골드 꺼낸다(몬스터 잡아 얻은)
+							gold += monstersInfo.get(0).idx;
+							
+							// 몬스터의 위치 정보 업데이트
+							updateMonsters(monstersInfo);
 							repaint();
 							break;
 						
@@ -616,8 +624,21 @@ public class GamePanel extends JPanel {
 			}catch (Exception e) {
 				e.printStackTrace();
 			}
+			
 		}
-
+		private void updateMonsters(Vector<MonsterPosPair> monstersInfo) {
+		    // monstersInfo에서 몬스터 위치 정보를 추출하여 그리기 위한 몬스터 목록을 업데이트합니다.
+		    List<Point> monsterPoints = new ArrayList<>();
+		    for (MonsterPosPair monsterPair : monstersInfo) {
+		        if (monsterPair.monster != null) {
+		            monsterPoints.add(monsterPair.monster.getPoint());
+		        }
+		    }
+		    // 이제 monsterPoints에는 모든 몬스터의 위치 정보 존재
+		    // 이 정보를 화면에 그리기 위한 monsters를 초기화 후 저장.
+		    monsters.clear();
+		    monsters.addAll(monsterPoints);
+		}
 //		// 터렛 위치 업데이트하는 메서드
 //		private void updateTurretLocation(Point newTurretLocation) {
 //			// 중복된 터렛 위치가 없는 경우 추가
