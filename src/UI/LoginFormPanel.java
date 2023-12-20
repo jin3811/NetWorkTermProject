@@ -25,10 +25,7 @@ public class LoginFormPanel extends JPanel {
 
     private Dimension labelSize = new Dimension(80, 30);
     private Dimension buttonSize = new Dimension(100, 25);
-    
-    private DataOutputStream dos;
-    private DataInputStream dis;
-    
+
     private Socket socket; // connectToServer() 에서 초기화됨
 
     private RandomDefence context;
