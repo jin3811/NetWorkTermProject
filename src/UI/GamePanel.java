@@ -46,8 +46,6 @@ public class GamePanel extends JPanel {
 	private Image turret2Image;
 	private Image monsterImage;
 
-	
-
 	List<Point> allPoints = new ArrayList<>();
 	List<Point> bluePath;
 	List<Point> redPath;
@@ -60,7 +58,7 @@ public class GamePanel extends JPanel {
 	private TEAM team;
 
 	// 추가중..
-	
+
 	// 포탑 설치구역 가지는 객체
 	private BlueArea blueAreaInstance;
 	private RedArea redAreaInstance;
@@ -72,6 +70,8 @@ public class GamePanel extends JPanel {
 	// 포탑 위치 저장하는 리스트
 	List<Point> turrets = new ArrayList<>();
 
+	// 클라이언트단 골드
+	private int gold;
 	// ...
 
 	public GamePanel(RandomDefence context, String nickname, Socket socket, ObjectOutputStream objOs,
@@ -278,16 +278,16 @@ public class GamePanel extends JPanel {
 				int tileX = (clickPoint.x / tileSize) * tileSize;
 				int tileY = (clickPoint.y / tileSize) * tileSize;
 				Point turretPoint = new Point(tileX, tileY);
-				
+
 //				Rectangle turretRect = new Rectangle(tileX, tileY, tileSize, tileSize);
 
 				// 포탑 설치 가능 구역 클릭 시
-				if (!isTurretPresent(turretPoint)&&isValidTurretPlacement(turretPoint, team)) {
-					// 서버에 포탑 배치 요청	
+				if (!isTurretPresent(turretPoint) && isValidTurretPlacement(turretPoint, team)) {
+					// 서버에 포탑 배치 요청
 					sendTurretPlacementRequest(turretPoint);
 				}
 				// 이미 설치된 포탑 클릭 시 && 업그레이드 가능한지
-				else if(isTurretPresent(turretPoint)&&isValidUpgradeTurret(turretPoint)) {
+				else if (isTurretPresent(turretPoint) && isValidUpgradeTurret(turretPoint)) {
 					// 서버에 포탑 업그레이드 요청
 					sendTurretUpgradeRequest(turretPoint);
 				}
@@ -309,13 +309,16 @@ public class GamePanel extends JPanel {
 		// List<Point> turrets 에 turretPoint가 포함되어 있는지 확인
 		return turrets.contains(turretPoint);
 	}
-	
+
 	// 포탑 업그레이드가 유효한지 확인 - TODO
 	private boolean isValidUpgradeTurret(Point turretPoint) {
-	    // 해당 포탑이 업그레이드 가능한 상태인지 (예: 충분한 자원이 있는지, 업그레이드 최대 레벨이 아닌지 등) 확인
-	    // 이 예제에서는 단순히 true를 반환하였으나, 실제 게임 로직에 따라 구현 필요
-	    return true; // 실제 게임 로직에 맞게 구현
+		// 해당 포탑이 업그레이드 가능한 상태인지 (예: 충분한 자원이 있는지, 업그레이드 최대 레벨이 아닌지 등) 확인
+		// 이 예제에서는 단순히 true를 반환하였으나, 실제 게임 로직에 따라 구현 필요
+		// 1. 골드가 일정 이상인가
+		// 2. 업그레이드 최대 레벨보다 낮은가
+		return true; // 실제 게임 로직에 맞게 구현
 	}
+
 	// 포탑 배치가 유효한지 확인
 	private boolean isValidTurretPlacement(Point turretPoint, TEAM team) {
 		return isWithinTeamArea(turretPoint, team) && !isMonsterPathArea(turretPoint) && !isRestrictedArea(turretPoint);
@@ -351,42 +354,28 @@ public class GamePanel extends JPanel {
 		List<Point> restrictArea = restrictAreaInstance.getRestrictArea();
 		return restrictArea.contains(turretPoint);
 	}
-	
+
 	// 서버에 포탑 설치 요청을 보내는 메서드
 	private void sendTurretPlacementRequest(Point turretPoint) {
-	    // 서버에 포탑 설치 요청을 보내는 로직 구현
+		// 서버에 포탑 설치 요청을 보내는 로직 구현
 	}
 
 	// 서버에 포탑 업그레이드 요청을 보내는 메서드
 	private void sendTurretUpgradeRequest(Point turretPoint) {
-	    // 서버에 포탑 업그레이드 요청을 보내는 로직 구현
+		// 서버에 포탑 업그레이드 요청을 보내는 로직 구현
 	}
-	// 포탑 배치 가능 영역인지 확인
-//	protected boolean isTurretPlacementArea(Point turretPoint) {
-//		if(team == TEAM.RED) {
-//			return isWithinRedArea(turretPoint);
-//		} else if(team == TEAM.BLUE) {
-//			return isWithinRedArea(turretPoint);
-//		}
-//		return false;
-//	}
-//	private boolean isWithinRedArea(Point turretPoint) {
-//		// TODO Auto-generated method stub
-//		return false;
-//	}
-//
-//	// 서버에서 사용할 코드(미리 적어놓음)
-//	public void handleTurretRequest(Point turretPoint) {
-//
-//	}
-//
 
+	// 서버로부터 포탑의 위치 정보를 받음
+	private void receiveTurretDataFromServer() {
+		// 서버로부터 포탑 데이터를 수신하는 로직
+		// 예를 들어, 서버로부터 받은 포탑 위치 데이터를 turrets 리스트에 추가하거나 업데이트
+	}
 
 	// 서버 응답 처리
 	private void handleServerResponse(Object response) {
 		// 1. 서버로부터 응답을 받는다
 		// 2. 응답받은 것에서 turret의 Position을 꺼낸다
-		// 3. turrets에 받아온 turret의 Position을 추가한다.
+		// 3. turrets에 받아온 turret의 Position을 추가 및 업데이트
 		// 4. repaint() 호출하여 다시 그린다.
 
 		repaint();
@@ -414,33 +403,8 @@ public class GamePanel extends JPanel {
 
 	private void drawPath_red(Graphics g) {
 		if (pathImage1 != null) {
-
 			int pathWidth = pathImage1.getWidth(this);
 			int pathHeight = pathImage1.getHeight(this);
-//			for(int i=22;i<=29;i++) {
-//				g.drawImage(pathImage1, allPoints.get(i).x, allPoints.get(i).y, this);
-//			}
-//			for(int i=362;i<=369;i++) {
-//				g.drawImage(pathImage1, allPoints.get(i).x, allPoints.get(i).y, this);
-//			}
-//			for(int i=181;i<=188;i++) {
-//				g.drawImage(pathImage1, allPoints.get(i).x, allPoints.get(i).y, this);
-//			}
-//			for(int i=201;i<=208;i++) {
-//				g.drawImage(pathImage1, allPoints.get(i).x, allPoints.get(i).y, this);
-//			}
-//			for(int i=41;i<=161;i+=20) {
-//				g.drawImage(pathImage1, allPoints.get(i).x, allPoints.get(i).y, this);
-//			}
-//			for(int i=221;i<=341;i+=20) {
-//				g.drawImage(pathImage1, allPoints.get(i).x, allPoints.get(i).y, this);
-//			}
-//			for(int i=29;i<=169;i+=20) {
-//				g.drawImage(pathImage1, allPoints.get(i).x, allPoints.get(i).y, this);
-//			}
-//			for(int i=229;i<=349;i+=20) {
-//				g.drawImage(pathImage1, allPoints.get(i).x, allPoints.get(i).y, this);
-//			}
 			for (Point p : redPath) {
 				g.drawImage(pathImage1, p.x, p.y, this);
 			}
@@ -501,4 +465,87 @@ public class GamePanel extends JPanel {
 			}
 		}
 	}
+
+	class ClientReceiver extends Thread {
+		private ObjectInputStream objIs;
+
+		public ClientReceiver(ObjectInputStream objIs) {
+			this.objIs = objIs;
+		}
+
+		@Override
+		public void run() {
+			try {
+				while(true) {
+					// 서버에서 Object 읽기
+					MOD packet = (MOD) objIs.readObject();
+					MODE mode = packet.getMode();
+					
+					switch(mode) {
+						// 레드팀 터렛 그리기
+						case RED_TURRET_MOD:
+							break;
+						// 블루팀 터렛 그리기
+						case BLUE_TURRET_MOD:
+							break;
+						// 레드팀 몬스터 그리기
+						case RED_MONSTER_MOD:
+							break;
+						// 블루팀 몬스터 그리기
+						case BLUE_MONSTER_MOD:
+							break;
+					}
+					
+					
+				}
+			
+			}catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+	}
 }
+//포탑 배치 가능 영역인지 확인
+//	protected boolean isTurretPlacementArea(Point turretPoint) {
+//		if(team == TEAM.RED) {
+//			return isWithinRedArea(turretPoint);
+//		} else if(team == TEAM.BLUE) {
+//			return isWithinRedArea(turretPoint);
+//		}
+//		return false;
+//	}
+//	private boolean isWithinRedArea(Point turretPoint) {
+//		// TODO Auto-generated method stub
+//		return false;
+//	}
+//
+//	// 서버에서 사용할 코드(미리 적어놓음)
+//	public void handleTurretRequest(Point turretPoint) {
+//
+//	}
+//
+
+//for(int i=22;i<=29;i++) {
+//g.drawImage(pathImage1, allPoints.get(i).x, allPoints.get(i).y, this);
+//}
+//for(int i=362;i<=369;i++) {
+//g.drawImage(pathImage1, allPoints.get(i).x, allPoints.get(i).y, this);
+//}
+//for(int i=181;i<=188;i++) {
+//g.drawImage(pathImage1, allPoints.get(i).x, allPoints.get(i).y, this);
+//}
+//for(int i=201;i<=208;i++) {
+//g.drawImage(pathImage1, allPoints.get(i).x, allPoints.get(i).y, this);
+//}
+//for(int i=41;i<=161;i+=20) {
+//g.drawImage(pathImage1, allPoints.get(i).x, allPoints.get(i).y, this);
+//}
+//for(int i=221;i<=341;i+=20) {
+//g.drawImage(pathImage1, allPoints.get(i).x, allPoints.get(i).y, this);
+//}
+//for(int i=29;i<=169;i+=20) {
+//g.drawImage(pathImage1, allPoints.get(i).x, allPoints.get(i).y, this);
+//}
+//for(int i=229;i<=349;i+=20) {
+//g.drawImage(pathImage1, allPoints.get(i).x, allPoints.get(i).y, this);
+//}
