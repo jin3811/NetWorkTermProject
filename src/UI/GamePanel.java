@@ -608,35 +608,36 @@ public class GamePanel extends JPanel {
 						
 						synchronized (objIs) {
 							packet = (MOD) objIs.readObject();
+						
+							MODE mode = packet.getMode();
+	
+							switch (mode) {
+							// 상대 터렛 그리기
+							case PNT_TURRET_MOD:
+								// 1. 상대편 List<Turret>을 꺼내 turrets에 저장
+								turrets.clear();
+								turrets = (List<Turret>) packet.getPayload();
+								// 2. 받아온 상대편 List<Turret> turrets를 enemyTurrets에 삽입.
+								enemyTurrets.clear();
+								enemyTurrets.addAll(turrets);
+								// 3. 다시 그리기
+								repaint();
+								break;
+							// 몬스터 그리기
+							case PNT_MONSTER_MOD:
+								// 1. Vector<MonsterPosPair>을 꺼낸다
+								Vector<MonsterPosPair> monstersInfo = (Vector<MonsterPosPair>) packet.getPayload();
+								// 2. 골드 꺼낸다(몬스터 잡아 얻은)
+								gold += monstersInfo.get(0).idx;
+	
+								// 몬스터의 위치 정보 업데이트
+								updateMonsters(monstersInfo);
+								repaint();
+								break;
+	
+							}
+							objIs.reset();
 						}
-						MODE mode = packet.getMode();
-
-						switch (mode) {
-						// 상대 터렛 그리기
-						case PNT_TURRET_MOD:
-							// 1. 상대편 List<Turret>을 꺼내 turrets에 저장
-							turrets.clear();
-							turrets = (List<Turret>) packet.getPayload();
-							// 2. 받아온 상대편 List<Turret> turrets를 enemyTurrets에 삽입.
-							enemyTurrets.clear();
-							enemyTurrets.addAll(turrets);
-							// 3. 다시 그리기
-							repaint();
-							break;
-						// 몬스터 그리기
-						case PNT_MONSTER_MOD:
-							// 1. Vector<MonsterPosPair>을 꺼낸다
-							Vector<MonsterPosPair> monstersInfo = (Vector<MonsterPosPair>) packet.getPayload();
-							// 2. 골드 꺼낸다(몬스터 잡아 얻은)
-							gold += monstersInfo.get(0).idx;
-
-							// 몬스터의 위치 정보 업데이트
-							updateMonsters(monstersInfo);
-							repaint();
-							break;
-
-						}
-						objIs.reset();
 					}
 
 				} catch (Exception e) {
