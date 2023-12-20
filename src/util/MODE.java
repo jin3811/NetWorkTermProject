@@ -11,6 +11,5 @@ public enum MODE {
     GAME_START_MOD, // 게임 시작할게요
     PNT_TURRET_MOD, // 클라야 터렛 그려라
     PNT_MONSTER_MOD, // 클라야 몬스터 그려라
-    RED_TURRET_UPDATE_MOD, // 서버야 레드팀 터렛 업데이트 했다
-    BLUE_TURRET_UPDATE_MOD, // 서버야 블루팀 터렛 업데이트 했다
+    TURRET_UPDATE_MOD, // 서버야 터렛 업데이트 했다
 }
