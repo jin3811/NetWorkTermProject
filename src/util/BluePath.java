@@ -4,21 +4,11 @@ import java.awt.Point;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BluePath {
+public class BluePath extends Path {
 	private static BluePath bluePath;
-	List<Point> allPoints = new ArrayList<>();
-	List<Point> blueDirection1;
-	List<Point> blueDirection2;
-	List<Point> blueDirection3;
-	List<Point> blueDirection4;
 	private BluePath() {
-		for(int i=0;i<1000;i+=50) {
-			for(int j=0;j<1000;j+=50) {
-				Point p = new Point(j,i);
-				allPoints.add(p);
-			}
-		}
-		blueDirection1 = new ArrayList<Point>() {
+		super();
+		Direction1 = new ArrayList<Point>() {
 			{
 				add(allPoints.get(170));
 				add(allPoints.get(150));
@@ -37,7 +27,7 @@ public class BluePath {
 				add(allPoints.get(37));
 			}
 		};
-		blueDirection2 = new ArrayList<Point>() {
+		Direction2 = new ArrayList<Point>() {
 			{
 				add(allPoints.get(191));
 				add(allPoints.get(192));
@@ -56,7 +46,7 @@ public class BluePath {
 				add(allPoints.get(58));
 			}
 		};
-		blueDirection3 = new ArrayList<Point>() {
+		Direction3 = new ArrayList<Point>() {
 			{
 				add(allPoints.get(211));
 				add(allPoints.get(212));
@@ -77,7 +67,7 @@ public class BluePath {
 			}
 		};
 		
-		blueDirection4 = new ArrayList<Point>() {
+		Direction4 = new ArrayList<Point>() {
 			{
 				add(allPoints.get(230));
 				add(allPoints.get(250));
@@ -104,22 +94,5 @@ public class BluePath {
             bluePath = new BluePath();
         }
         return bluePath;
-    }
-	
-	// blueDirection 리스트에 대한 getter 메소드
-    public List<Point> getBlueDirection1() {
-        return blueDirection1;
-    }
-
-    public List<Point> getBlueDirection2() {
-        return blueDirection2;
-    }
-
-    public List<Point> getBlueDirection3() {
-        return blueDirection3;
-    }
-
-    public List<Point> getBlueDirection4() {
-        return blueDirection4;
     }
 }
