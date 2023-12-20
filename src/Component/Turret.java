@@ -36,8 +36,8 @@ public class Turret {
 		return level;
 	}
 	// 공격 메서드
-	public void attack() {
-		
+	public void attack(Monster target) {
+		target.setHP(target.HP - atkPower);
 	}
 	public void upgrade() {
 		if(level<MAX_LEVEL) {

@@ -30,8 +30,8 @@ public class GameManager {
         UserService player = this.server.userManager.getUserbyId(r.getPlayerId());
 
         games.put(roomNum, new GameSession(
-                new RedPlayer(manager),
-                new BluePlayer(player)
+                new Player(manager),
+                new Player(player)
         ));
     }
 
@@ -45,6 +45,8 @@ public class GameManager {
         protected int life;
         protected List<MonsterPosPair> monsters = new ArrayList<>();
         protected List<Turret> turrets = new CopyOnWriteArrayList<>();
+        private static final double TURRET_RANGE = 300; // 이 값은 게임의 실제 단위에 맞춰 조정해야 함
+
         public Player(UserService user) {
             this.user = user;
             this.gold = 500;
@@ -111,13 +113,53 @@ public class GameManager {
                             new Monster(getPoint(newMonsterPathIdx, null, path))));
 
             // 터렛에 의한 피격처리
-            int plusGold = 0;
+            int plusGold = turretAttackProcess();
 
             // 깊은복사한 Vector를 최종 전달
             // 0번째 요소는 처리된 몬스터를 바탕으로 몇골드를 얻게 되는지를 추가한다.
             Vector<MonsterPosPair> result = new Vector<>(monsters);
             result.insertElementAt(new MonsterPosPair(plusGold, null), 0);
             return result;
+        }
+
+        public int turretAttackProcess() {
+            int earnedGold = 0;
+
+            // 각 터렛에 대해 실행
+            for (Turret turret : turrets) {
+                if (turret.getLevel() > 0) { // 0 레벨은 공격 불가
+                    MonsterPosPair target = findClosestMonster(turret.getPoint());
+                    if (target != null) {
+                        // 몬스터 공격 로직
+                        turret.attack(target.monster);
+
+                        // 몬스터가 죽었는지 체크
+                        if (target.monster.getHP() <= 0) {
+                            monsters.remove(target);
+                            earnedGold += 10; // 가정한 금액, 게임 규칙에 따라 조정 필요
+                        }
+                    }
+                }
+            }
+
+            return earnedGold;
+        }
+
+        private MonsterPosPair findClosestMonster(Point turretPosition) {
+            MonsterPosPair closestMonster = null;
+            double closestDistance = Double.MAX_VALUE;
+
+            // 몬스터 리스트를 순회하며 가장 가까운 몬스터를 찾음
+            for (MonsterPosPair monsterPair : monsters) {
+                double distance = turretPosition.distance(monsterPair.monster.getPoint());
+                if (distance < closestDistance) {
+                    closestDistance = distance;
+                    closestMonster = monsterPair;
+                }
+            }
+
+            // 몬스터가 터렛의 사정거리 내에 있으면 반환
+            return closestDistance <= TURRET_RANGE ? closestMonster : null;
         }
     }
 
