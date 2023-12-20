@@ -174,7 +174,7 @@ public class BlueArea {
         }
         return blueArea;
     } 
-	 public List<Point> getRedArea() {
+	 public List<Point> getBlueArea() {
 	        return area;
 	    }
 
