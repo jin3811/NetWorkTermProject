@@ -4,6 +4,7 @@ import javax.imageio.ImageIO;
 import javax.naming.ldap.SortKey;
 import javax.swing.*;
 
+import Component.Monster;
 import Component.Turret;
 import Server.Room;
 import util.BlueArea;
@@ -601,7 +602,9 @@ public class GamePanel extends JPanel {
 						// 몬스터 그리기
 						case PNT_MONSTER_MOD:
 							// 1. Vector<MonsterPosPair>을 꺼낸다
-							
+							Vector<MonsterPosPair> v = (Vector<MonsterPosPair>) packet.getPayload();
+							// 2. 골드 꺼낸다
+							gold = v.get(0)
 							repaint();
 							break;
 						
