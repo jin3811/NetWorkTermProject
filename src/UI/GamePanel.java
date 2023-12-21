@@ -22,12 +22,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -36,7 +31,7 @@ import java.util.Vector;
 import java.util.List;
 
 // 실제 게임을 진행하는 panel
-public class GamePanel extends JPanel {
+public class GamePanel extends MultiRoomJPanel {
 	private RandomDefence context;
 	private Image grassImage;
 	private Image pathImage1;
@@ -53,9 +48,6 @@ public class GamePanel extends JPanel {
 	List<Point> bluePath;
 	List<Point> redPath;
 
-	private ObjectOutputStream objOs;
-	private ObjectInputStream objIs;
-	private Socket socket;
 	private long roomNum;
 
 	private TEAM team;
@@ -84,12 +76,8 @@ public class GamePanel extends JPanel {
 	private static final int MAX_LEVEL = 3;
 	// ...
 
-	public GamePanel(RandomDefence context, String nickname, Socket socket, ObjectOutputStream objOs,
-			ObjectInputStream objIs, long roomNum, TEAM team) {
+	public GamePanel(RandomDefence context, long roomNum, TEAM team) {
 		this.context = context;
-		this.socket = socket;
-		this.objOs = objOs;
-		this.objIs = objIs;
 		this.roomNum = roomNum;
 		this.team = team;
 		this.gold = 100;
@@ -344,7 +332,7 @@ public class GamePanel extends JPanel {
 	}
 
 	// 서버에 객체 전송
-	private void sendMessageToServer(MODE mode, Object payload) {
+	private void sendMessageToServer(MODE mode, Serializable payload) {
 		// TODO Auto-generated method stub
 		synchronized (objOs) {
 			try {

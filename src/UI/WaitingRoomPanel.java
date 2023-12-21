@@ -11,49 +11,33 @@ import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Vector;
 
-public class WaitingRoomPanel extends JPanel {
+public class WaitingRoomPanel extends MultiRoomJPanel implements TransitionDisplayCommand{
 
 	private RandomDefence context;
-	private String nickname;
-	private Socket socket;
-
 	private JList<String> roomList;
 	private Map<String, String> gameRoomUsers; // 대기방별 유저
 	private String selectedGameRoom;
-	
-	private ObjectInputStream objIs;
-    private ObjectOutputStream objOS;
-    
     DefaultListModel<String> model;
 	private boolean isReady = false;
-
 	private Thread updateRoomListThread;
 	private Thread loadingThread;
 	private Thread gameStartThread;
 	private JLabel stateLabel;
 	private TEAM myTeamColor;
-	public WaitingRoomPanel(RandomDefence context, String nickname, Socket socket) {
-		this.context = context;
-		this.nickname = nickname;
+
+	private ArrayList<Thread> threadPool = new ArrayList<>();
+
+	public WaitingRoomPanel(RandomDefence context) {
+		this.context = context;;
 		model = new DefaultListModel<>();
 		gameRoomUsers = new HashMap<>(); //
-
-		try {
-			this.socket = socket; // 로그인 패널에서 소켓 가져옴
-			// 스트림 초기화
-			objOS = new ObjectOutputStream(socket.getOutputStream());
-			objIs = new ObjectInputStream(socket.getInputStream());
-
-			if (this.socket != null)
-				System.out.println("소켓 가져오기 완료"); // 정상 확인
-		} catch (Exception e) {
-
-		}
 
 		context.setSize(1000, 800);
 
@@ -61,27 +45,30 @@ public class WaitingRoomPanel extends JPanel {
 
 		roomList = new JList<>(model);
 
-		stateLabel = new JLabel("참가자 대기중");
-		stateLabel.setHorizontalAlignment(JLabel.CENTER);
-		loadingThread = new PlayerWaitingThread(stateLabel);
 
 		JPanel topPanel = new JPanel(new BorderLayout());
 		JButton createRoomButton = new JButton("방 만들기");
 		JButton selectButton = new JButton("게임방 입장");
+		stateLabel = new JLabel(nickname + "님, 안녕하세요. 좋은 하루입니다.");
+
+		stateLabel.setHorizontalAlignment(JLabel.CENTER);
+		loadingThread = new PlayerWaitingThread(stateLabel);
+
+		topPanel.add(stateLabel, BorderLayout.CENTER);
 
 		createRoomButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				// 방제목 입력
 				String roomName = JOptionPane.showInputDialog(WaitingRoomPanel.this, "방 제목을 입력하세요: ", "방 만들기", JOptionPane.PLAIN_MESSAGE);
-				if(roomName!=null & !roomName.trim().isEmpty()) {
+				if(roomName!=null && !roomName.trim().isEmpty()) {
 					roomName = roomName.trim();
 
 					// 서버에 새 방 생성 요청 보냄
 					sendMessageToServer(MODE.CREATE_ROOM_MOD, roomName);
 
-					topPanel.add(stateLabel, BorderLayout.CENTER);
 					loadingThread.start();
+					threadPool.add(loadingThread);
 
 					// 방장이 어딜 떠날라고
 					selectButton.setEnabled(false);
@@ -114,6 +101,7 @@ public class WaitingRoomPanel extends JPanel {
 
 		updateRoomListThread = new UpdateRoomList();
 		updateRoomListThread.start();
+		threadPool.add(updateRoomListThread);
 
 		// 첫 화면 띄우기 위한 데이터 가져오기
 		sendMessageToServer(MODE.GET_ROOM_MOD, null);
@@ -122,7 +110,7 @@ public class WaitingRoomPanel extends JPanel {
 	}
 
 	// 서버에 메시지를 보내는 메소드
-	private void sendMessageToServer(MODE mode, Object payload) {
+	private void sendMessageToServer(MODE mode, Serializable payload) {
 	    try {
 	    	if(objOS!= null) {
 	    		objOS.writeObject(new MOD(mode, payload));
@@ -164,13 +152,16 @@ public class WaitingRoomPanel extends JPanel {
 						System.out.println(nickname + " : 게임 시작신호 받음");
 						if (loadingThread != null) {
 							loadingThread.interrupt();
+
 							gameStartThread = new GameStartThread(roomNum);
 							gameStartThread.start();
+							threadPool.add(gameStartThread);
 						}
 
 					}
 				}catch (Exception e) {
 					// TODO: handle exception
+					break;
 				}
 			}
 		}
@@ -178,11 +169,11 @@ public class WaitingRoomPanel extends JPanel {
 
 	private class PlayerWaitingThread extends Thread{
 		private JLabel loading;
-		private String origin;
+		private String origin = "참가자 대기중";
 
 		public PlayerWaitingThread(JLabel loading) {
+			setName("user-" + nickname + " : 대기 라벨 출력 스레드");
 			this.loading = loading;
-			origin = loading.getText();
 		}
 
 		@Override
@@ -202,6 +193,7 @@ public class WaitingRoomPanel extends JPanel {
 					sleep(250);
 				} catch (InterruptedException e) {
 					System.out.println("게임 화면으로 넘어가기 위해 참여자 대기 스레드 종료");
+					break;
 				}
 			}
 		}
@@ -215,6 +207,7 @@ public class WaitingRoomPanel extends JPanel {
 		}
 		@Override
 		public void run() {
+			setName("user-" + nickname + " : 게임 시작 안내 스레드");
 			loadingThread.interrupt();
 			for (int i = 5 ; i >= 0; i--) {
 				stateLabel.setText(i + "초후 게임이 시작됩니다. 준비해주세요.");
@@ -225,10 +218,20 @@ public class WaitingRoomPanel extends JPanel {
 				}
 			}
 			System.out.println("화면 전환");
-			context.transition(new GamePanel(context, nickname, socket, objOS, objIs, roomNum, myTeamColor));
+			context.transition(new GamePanel(context, roomNum, myTeamColor), WaitingRoomPanel.this);
 			updateRoomListThread.interrupt();
 			loadingThread.interrupt();
-			this.interrupt();
+//			this.interrupt();
 		}
+	}
+
+	@Override
+	public void execute() {
+		for (Thread th : threadPool) {
+			th.interrupt();
+		}
+		this.socket = null;
+		this.objOs = null;
+		this.objIs = null;
 	}
 }
