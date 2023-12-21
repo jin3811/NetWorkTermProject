@@ -11,49 +11,33 @@ import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Vector;
 
-public class WaitingRoomPanel extends JPanel {
+public class WaitingRoomPanel extends MultiRoomJPanel implements TransitionDisplayCommand{
 
 	private RandomDefence context;
-	private String nickname;
-	private Socket socket;
-
 	private JList<String> roomList;
 	private Map<String, String> gameRoomUsers; // 대기방별 유저
 	private String selectedGameRoom;
-	
-	private ObjectInputStream objIs;
-    private ObjectOutputStream objOS;
-    
     DefaultListModel<String> model;
 	private boolean isReady = false;
-
 	private Thread updateRoomListThread;
 	private Thread loadingThread;
 	private Thread gameStartThread;
 	private JLabel stateLabel;
 	private TEAM myTeamColor;
-	public WaitingRoomPanel(RandomDefence context, String nickname, Socket socket) {
-		this.context = context;
-		this.nickname = nickname;
+
+	private ArrayList<Thread> threadPool = new ArrayList<>();
+
+	public WaitingRoomPanel(RandomDefence context) {
+		this.context = context;;
 		model = new DefaultListModel<>();
 		gameRoomUsers = new HashMap<>(); //
-
-		try {
-			this.socket = socket; // 로그인 패널에서 소켓 가져옴
-			// 스트림 초기화
-			objOS = new ObjectOutputStream(socket.getOutputStream());
-			objIs = new ObjectInputStream(socket.getInputStream());
-
-			if (this.socket != null)
-				System.out.println("소켓 가져오기 완료"); // 정상 확인
-		} catch (Exception e) {
-
-		}
 
 		context.setSize(1000, 800);
 
@@ -84,6 +68,7 @@ public class WaitingRoomPanel extends JPanel {
 					sendMessageToServer(MODE.CREATE_ROOM_MOD, roomName);
 
 					loadingThread.start();
+					threadPool.add(loadingThread);
 
 					// 방장이 어딜 떠날라고
 					selectButton.setEnabled(false);
@@ -116,6 +101,7 @@ public class WaitingRoomPanel extends JPanel {
 
 		updateRoomListThread = new UpdateRoomList();
 		updateRoomListThread.start();
+		threadPool.add(updateRoomListThread);
 
 		// 첫 화면 띄우기 위한 데이터 가져오기
 		sendMessageToServer(MODE.GET_ROOM_MOD, null);
@@ -124,7 +110,7 @@ public class WaitingRoomPanel extends JPanel {
 	}
 
 	// 서버에 메시지를 보내는 메소드
-	private void sendMessageToServer(MODE mode, Object payload) {
+	private void sendMessageToServer(MODE mode, Serializable payload) {
 	    try {
 	    	if(objOS!= null) {
 	    		objOS.writeObject(new MOD(mode, payload));
@@ -169,11 +155,13 @@ public class WaitingRoomPanel extends JPanel {
 
 							gameStartThread = new GameStartThread(roomNum);
 							gameStartThread.start();
+							threadPool.add(gameStartThread);
 						}
 
 					}
 				}catch (Exception e) {
 					// TODO: handle exception
+					break;
 				}
 			}
 		}
@@ -230,10 +218,20 @@ public class WaitingRoomPanel extends JPanel {
 				}
 			}
 			System.out.println("화면 전환");
-			context.transition(new GamePanel(context, nickname, socket, objOS, objIs, roomNum, myTeamColor));
+			context.transition(new GamePanel(context, roomNum, myTeamColor), WaitingRoomPanel.this);
 			updateRoomListThread.interrupt();
 			loadingThread.interrupt();
 //			this.interrupt();
 		}
+	}
+
+	@Override
+	public void execute() {
+		for (Thread th : threadPool) {
+			th.interrupt();
+		}
+		this.socket = null;
+		this.objOs = null;
+		this.objIs = null;
 	}
 }
