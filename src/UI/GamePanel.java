@@ -312,23 +312,26 @@ public class GamePanel extends MultiRoomJPanel {
 
 		});
 
+		// 스레드 시작
+	}
+
+	@Override
+	public void initCommunicate() {
 		synchronized (objOs) {
 
 			try {
 				objOs.writeObject(new MOD(MODE.GAME_START_MOD, roomNum));
 				objOs.flush();
-				
+
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}
 		}
+
 		initTurrets();
+
 		clientReceiverThread = new ClientReceiver();
 		clientReceiverThread.start();
-		setVisible(true);
-
-		// 스레드 시작
-
 	}
 
 	// 서버에 객체 전송

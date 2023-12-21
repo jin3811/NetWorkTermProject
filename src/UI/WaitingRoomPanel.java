@@ -40,6 +40,8 @@ public class WaitingRoomPanel extends MultiRoomJPanel implements TransitionDispl
 		model = new DefaultListModel<>();
 		gameRoomUsers = new HashMap<>(); //
 
+		System.out.println(objOs);
+
 		context.setSize(1000, 800);
 
 		setLayout(new BorderLayout());
@@ -99,15 +101,15 @@ public class WaitingRoomPanel extends MultiRoomJPanel implements TransitionDispl
 	    add(topPanel, BorderLayout.NORTH);
 		add(new JScrollPane(roomList), BorderLayout.CENTER);
 		add(selectButton, BorderLayout.SOUTH);
+	}
 
+	public void initCommunicate() {
 		updateRoomListThread = new UpdateRoomList();
 		updateRoomListThread.start();
 		threadPool.add(updateRoomListThread);
 
 		// 첫 화면 띄우기 위한 데이터 가져오기
 		sendMessageToServer(MODE.GET_ROOM_MOD, null);
-
-		setVisible(true);
 	}
 
 	// 서버에 메시지를 보내는 메소드

@@ -43,4 +43,6 @@ public abstract class MultiRoomJPanel extends JPanel {
     public void setNickname(String nickname) {
         this.nickname = nickname;
     }
+
+    public abstract void initCommunicate();
 }

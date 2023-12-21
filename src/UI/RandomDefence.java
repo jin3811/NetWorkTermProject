@@ -44,6 +44,8 @@ public class RandomDefence extends JFrame{
         displayTarget.setSocket(socket);
         displayTarget.setObjOs(objOs);
         displayTarget.setObjIs(objIs);
+        displayTarget.setNickname(nickname);
+        displayTarget.initCommunicate();
 
         getContentPane().removeAll();
         getContentPane().add(displayTarget);
