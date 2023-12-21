@@ -103,6 +103,8 @@ public class WaitingRoomPanel extends MultiRoomJPanel implements TransitionDispl
 	}
 
 	public void initCommunicate() {
+		stateLabel.setText(nickname + "님, 안녕하세요. 좋은 하루입니다.");
+
 		updateRoomListThread = new UpdateRoomList();
 		updateRoomListThread.start();
 		threadPool.add(updateRoomListThread);
