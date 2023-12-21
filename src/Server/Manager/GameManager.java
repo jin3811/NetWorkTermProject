@@ -253,20 +253,29 @@ public class GameManager {
 
             @Override
             public void run() {
-                Vector<MonsterPosPair> current;
+                Vector<MonsterPosPair> redCurrent, blueCurrent, redTemp, blueTemp;
 
                 try {
                     sleep(2000);
                     while(true){
-                        current = new Vector<>();
-                        current.addAll(red.monsterProcess(redPath));
-                        current.addAll(blue.monsterProcess(bluePath));
+                        redCurrent = new Vector<>();
+                        blueCurrent = new Vector<>();
+                        redTemp = red.monsterProcess(redPath);
+                        blueTemp = blue.monsterProcess(bluePath);
+
+                        redCurrent.add(redTemp.get(0));
+                        redCurrent.addAll(redTemp.subList(1, redTemp.size()));
+                        redCurrent.addAll(blueTemp.subList(1, blueTemp.size()));
+
+                        blueCurrent.add(blueTemp.get(0));
+                        blueCurrent.addAll(redTemp.subList(1, redTemp.size()));
+                        blueCurrent.addAll(blueTemp.subList(1, blueTemp.size()));
 
                         synchronized (redObjOs) {
                             synchronized (blueObjOs) {
                                 try {
-                                    redObjOs.writeObject(new MOD(MODE.PNT_MONSTER_MOD, new Vector<MonsterPosPair>(current)));
-                                    blueObjOs.writeObject(new MOD(MODE.PNT_MONSTER_MOD, new Vector<MonsterPosPair>(current)));
+                                    redObjOs.writeObject(new MOD(MODE.PNT_MONSTER_MOD, new Vector<MonsterPosPair>(redCurrent)));
+                                    blueObjOs.writeObject(new MOD(MODE.PNT_MONSTER_MOD, new Vector<MonsterPosPair>(blueCurrent)));
 
                                     redObjOs.flush();
                                     blueObjOs.flush();
