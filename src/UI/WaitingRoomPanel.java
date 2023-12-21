@@ -112,9 +112,9 @@ public class WaitingRoomPanel extends MultiRoomJPanel implements TransitionDispl
 	// 서버에 메시지를 보내는 메소드
 	private void sendMessageToServer(MODE mode, Serializable payload) {
 	    try {
-	    	if(objOS!= null) {
-	    		objOS.writeObject(new MOD(mode, payload));
-	    		objOS.flush();
+	    	if(objOs!= null) {
+	    		objOs.writeObject(new MOD(mode, payload));
+	    		objOs.flush();
 	    	}
 	    } catch (IOException ex) {
 	        ex.printStackTrace();
