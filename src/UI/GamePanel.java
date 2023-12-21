@@ -22,16 +22,22 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.io.*;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Vector;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.List;
 
 // 실제 게임을 진행하는 panel
-public class GamePanel extends MultiRoomJPanel {
+public class GamePanel extends JPanel {
 	private RandomDefence context;
 	private Image grassImage;
 	private Image pathImage1;
@@ -48,6 +54,9 @@ public class GamePanel extends MultiRoomJPanel {
 	List<Point> bluePath;
 	List<Point> redPath;
 
+	private ObjectOutputStream objOs;
+	private ObjectInputStream objIs;
+	private Socket socket;
 	private long roomNum;
 
 	private TEAM team;
@@ -62,26 +71,43 @@ public class GamePanel extends MultiRoomJPanel {
 	private RedPath redPathInstance;
 	// 제한 구역 가지는 객체
 	private RestrictArea restrictAreaInstance;
+//	// 포탑 위치 저장하는 리스트
+//	List<Turret> myTurrets = new ArrayList<>();
+//	List<Turret> enemyTurrets = new ArrayList<>();
+//	// 몬스터 위치 저장하는 리스트
+//	List<Point> monsters = new ArrayList<>();
+	
 	// 포탑 위치 저장하는 리스트
-	List<Turret> myTurrets = new ArrayList<>();
-	List<Turret> enemyTurrets = new ArrayList<>();
+	CopyOnWriteArrayList<Turret> myTurrets = new  CopyOnWriteArrayList<>();
+	CopyOnWriteArrayList<Turret> enemyTurrets = new  CopyOnWriteArrayList<>();
+	// 몬스터 위치 저장하는 리스트
+	CopyOnWriteArrayList<Point> monsters = new  CopyOnWriteArrayList<>();
 
 //	List<Point> turrets = new ArrayList<>();
 	// 포탑 레벨 2 위치 저장하는 리스트
 //	List<Point> turrets2 = new ArrayList<>();
-	// 몬스터 위치 저장하는 리스트
-	List<Point> monsters = new ArrayList<>();
 	// 클라이언트단 골드
 	private int gold;
 	private static final int MAX_LEVEL = 3;
 	// ...
 
-	public GamePanel(RandomDefence context, long roomNum, TEAM team) {
+	public GamePanel(RandomDefence context, String nickname, Socket socket, ObjectOutputStream objOs, ObjectInputStream objIs, long roomNum, TEAM team) {
 		this.context = context;
+		this.socket = socket;
+		this.objOs = objOs;
+		this.objIs = objIs;
 		this.roomNum = roomNum;
 		this.team = team;
 		this.gold = 100;
-
+		if(objOs==null)
+			System.out.println("objOs가 null");
+		else{
+			System.out.println("objOs 초기화 완료");
+		}
+		if(objIs==null)
+			System.out.println("objIs가 null");
+		else
+			System.out.println("objIs 초기화 완료");
 		// 추가중 ..
 		blueAreaInstance = BlueArea.getInstance();
 		redAreaInstance = RedArea.getInstance();
@@ -312,30 +338,27 @@ public class GamePanel extends MultiRoomJPanel {
 
 		});
 
-		// 스레드 시작
-	}
-
-	@Override
-	public void initCommunicate() {
 		synchronized (objOs) {
 
 			try {
 				objOs.writeObject(new MOD(MODE.GAME_START_MOD, roomNum));
 				objOs.flush();
-
+				
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}
 		}
-
 		initTurrets();
-
 		clientReceiverThread = new ClientReceiver();
 		clientReceiverThread.start();
+		setVisible(true);
+
+		// 스레드 시작
+
 	}
 
 	// 서버에 객체 전송
-	private void sendMessageToServer(MODE mode, Serializable payload) {
+	private void sendMessageToServer(MODE mode, Object payload) {
 		// TODO Auto-generated method stub
 		synchronized (objOs) {
 			try {
@@ -480,7 +503,6 @@ public class GamePanel extends MultiRoomJPanel {
 
 		// List<Turret> myTurrets의 모든 Point에 포탑 이미지 그리기
 		synchronized (myTurrets) {
-			
 			for (Turret turret : myTurrets) {
 				if (turret.getLevel() == 0) { // 포탑 레벨이 0 -> 잔디 그리기
 					g.drawImage(grassImage, turret.getPoint().x, turret.getPoint().y, this);
@@ -509,6 +531,7 @@ public class GamePanel extends MultiRoomJPanel {
 				g.drawImage(monsterImage, monster.x, monster.y, this);
 			}
 		}
+		
 	}
 
 	// 포탑 레벨에 따른 다른 터렛 이미지 반환
@@ -629,7 +652,6 @@ public class GamePanel extends MultiRoomJPanel {
 								Vector<MonsterPosPair> monstersInfo = (Vector<MonsterPosPair>) packet.getPayload();
 								// 2. 골드 꺼낸다(몬스터 잡아 얻은)
 								gold += monstersInfo.get(0).idx;
-
 								// 몬스터의 위치 정보 업데이트
 								updateMonsters(monstersInfo);
 								repaint();

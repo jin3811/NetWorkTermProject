@@ -1,37 +1,27 @@
 package util;
 
-import Component.Turret;
-
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Objects;
-import java.util.Vector;
 
 public class MOD implements Serializable {
 
+    @Serial
+    private static final long serialVersionUID = 267326879574723932L;
     private MODE mode;
-//    private Object payload;
-    private Serializable payload;
+    private Object payload;
 
-    public MOD(MODE mode, Serializable payload) {
+    public MOD(MODE mode, Object payload) {
         this.mode = mode;
         this.payload = payload;
-//        if (payload == null) {
-//            this.payload = null;
-//        }
-//        else if (payload instanceof Vector<?> pay) {
-//            this.payload = new Data((Vector<MonsterPosPair>) pay);
-//        }
-//        else if(payload instanceof ArrayList<?> pay) {
-//            this.payload = new Data((ArrayList<Turret>)pay);
-//        }
-//        else if(payload instanceof String pay) {
-//            this.payload = new Data((String) pay);
-//        }
-//        else {
-//            this.payload = new Data((long) payload);
-//        }
+    }
+
+    public MOD(MODE mode) {
+        this(mode, null);
+    }
+
+    public MOD() {
+        this(null, null);
     }
 
     public MODE getMode() {
@@ -42,7 +32,7 @@ public class MOD implements Serializable {
         this.mode = mode;
     }
 
-    public Serializable getPayload() {
+    public Object getPayload() {
         return payload;
     }
 
