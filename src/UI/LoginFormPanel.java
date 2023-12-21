@@ -149,4 +149,6 @@ public class LoginFormPanel extends MultiRoomJPanel implements TransitionDisplay
         this.objOs = null;
         this.objIs = null;
     }
+    @Override
+    public void initCommunicate() {}
 }
