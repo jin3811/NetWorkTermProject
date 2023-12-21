@@ -233,9 +233,6 @@ public class GameManager {
 
                         winOS.flush();
                         lossOS.flush();
-
-                        System.out.println("user-"+winner.user.getUserID() + " : 승리");
-                        System.out.println("user-"+losser.user.getUserID() + " : 패배");
                     }
                     catch (IOException e) {
                         System.out.println("승패 가려졌지만 클라가 받지 못함");
@@ -246,7 +243,7 @@ public class GameManager {
         }
 
         public boolean isGameEnd() {
-            return red.getLife() <= 0 || blue.getLife() <= 0;
+            return red.getLife() == 0 || blue.getLife() == 0;
         }
         public synchronized Player getPlayer(int uid) {
             return red.user.getUserID() == uid ? red : blue;

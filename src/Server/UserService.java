@@ -53,7 +53,7 @@ public class UserService extends Thread implements Serializable{
                 System.out.println("uid#" + id + " - MOD 수신함 : " + receive.toString());
                 switch (receive.getMode()) {
                     case CREATE_ROOM_MOD -> {
-                        r = this.server.roomMananger.createRoom((String) receive.getPayload(), id);
+                        r = this.server.roomMananger.createRoom((String)receive.getPayload(), id);
                         System.out.println("id : " + id + " 방 생성 요청");
                     }
                     case GET_ROOM_MOD -> {
@@ -63,7 +63,7 @@ public class UserService extends Thread implements Serializable{
                         objOS.flush();
                     }
                     case PARTICIPANT_MOD -> {
-                        String roomName = (String) receive.getPayload();
+                        String roomName = (String)receive.getPayload();
                         r = this.server.roomMananger.enterRoom(roomName, this.id);
                         System.out.println("id : " + id + " 방 참가 요청");
                     }
@@ -74,10 +74,7 @@ public class UserService extends Thread implements Serializable{
                     }
                     case TURRET_UPDATE_MOD -> {
                         System.out.println("터렛 업뎃 들어옴");
-                        synchronized (objOS) {
-                            objOS.writeObject("asdfasdfa");
-                            objOS.flush();
-                        }
+                        
                         // 일단 상대를 알아온다
                         UserService enemy = this.server.userManager.getUserbyId(r.getEnemy(this.id));
 
