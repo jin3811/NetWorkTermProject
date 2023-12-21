@@ -31,6 +31,7 @@ public class WaitingRoomPanel extends MultiRoomJPanel implements TransitionDispl
 	private Thread gameStartThread;
 	private JLabel stateLabel;
 	private TEAM myTeamColor;
+	private volatile boolean stopThreads = false; // 추가중
 
 	private ArrayList<Thread> threadPool = new ArrayList<>();
 
@@ -128,7 +129,7 @@ public class WaitingRoomPanel extends MultiRoomJPanel implements TransitionDispl
 		String roomName;
 		@Override
 		public void run() {
-			while(true) {
+			while(!stopThreads) {
 				try {
 					MOD packet = (MOD)objIs.readObject();
 					MODE mode = packet.getMode();
@@ -181,7 +182,7 @@ public class WaitingRoomPanel extends MultiRoomJPanel implements TransitionDispl
 			int a = 0;
 			String last;
 
-			while(true) {
+			while(!stopThreads) {
 				last = "";
 				for (int i = 0; i < a; i++) {
 					last += ".";
@@ -218,13 +219,17 @@ public class WaitingRoomPanel extends MultiRoomJPanel implements TransitionDispl
 				}
 			}
 			System.out.println("화면 전환");
-			context.transition(new GamePanel(context, roomNum, myTeamColor), WaitingRoomPanel.this);
 			updateRoomListThread.interrupt();
 			loadingThread.interrupt();
+			this.interrupt();
+			stopAllThreads();
+			context.transition(new GamePanel(context, roomNum, myTeamColor), WaitingRoomPanel.this);
 //			this.interrupt();
 		}
 	}
-
+	private void stopAllThreads() {
+		stopThreads = true;
+	}
 	@Override
 	public void execute() {
 		for (Thread th : threadPool) {
