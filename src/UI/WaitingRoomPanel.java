@@ -166,7 +166,9 @@ public class WaitingRoomPanel extends MultiRoomJPanel implements TransitionDispl
 					// TODO: handle exception
 					break;
 				}
+				System.out.println("UpdateRoomList 스레드 도는중..");
 			}
+			System.out.println("UpdateRoomList 스레드의 while문 탈출!");
 		}
 	}
 
