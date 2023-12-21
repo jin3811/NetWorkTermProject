@@ -602,9 +602,9 @@ public class GamePanel extends JPanel {
 		if (grassImage != null) {
 			int tileWidth = grassImage.getWidth(this);
 			int tileHeight = grassImage.getHeight(this);
-			System.out.println("tileWidth, tileHeight = " + tileWidth + ", " + tileHeight);
-			System.out.println("전체 너비 " + getWidth());
-			System.out.println("전체 높이 " + getHeight());
+//			System.out.println("tileWidth, tileHeight = " + tileWidth + ", " + tileHeight);
+//			System.out.println("전체 너비 " + getWidth());
+//			System.out.println("전체 높이 " + getHeight());
 			for (int y = 0; y < getHeight(); y += tileHeight) {
 				for (int x = 0; x < getWidth(); x += tileWidth) {
 					g.drawImage(grassImage, x, y, tileWidth, tileHeight, this);
