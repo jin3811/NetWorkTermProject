@@ -97,6 +97,9 @@ public class UserService extends Thread implements Serializable{
                             ));
                             enemyOS.flush();
                         }
+                        // 확인용 - 
+//                        User
+//                        ObjectOutputStream myOS = my
                     }
                 }
             }

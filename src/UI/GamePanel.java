@@ -678,6 +678,7 @@ public class GamePanel extends JPanel {
 			for (MonsterPosPair monsterPair : monstersInfo) {
 				if (monsterPair.monster != null) {
 					monsterPoints.add(monsterPair.monster.getPoint());
+//					System.out.println(monsterPair.monster.getPoint());
 				}
 			}
 			// 이제 monsterPoints에는 모든 몬스터의 위치 정보 존재
