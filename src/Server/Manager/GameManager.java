@@ -111,19 +111,24 @@ public class GameManager {
                 for (MonsterPosPair m : monsters) {
 
                     try {
+//                        System.out.print("move : " + m.monster.getPoint() + " -> ");
                         m.monster.setPoint(getPoint(m.idx, m.monster.getPoint(), path));
+//                        System.out.println(m.monster.getPoint());
                     } catch (IndexOutOfBoundsException e) {
                         decreaseLife();
                         monsters.remove(m);
                     }
                 }
             }
-
+//            System.out.print("new  : ");
             // 새로운 몹을 생성한 후, 몹 리스트에 넣는다
             int newMonsterPathIdx = randGenerator.nextInt(4) + 1;
+            Monster newMonster = new Monster(getPoint(newMonsterPathIdx, null, path));
+//            System.out.println(newMonster.getPoint() + "\n---------------");
+
             monsters.add(new MonsterPosPair(
                             newMonsterPathIdx,
-                            new Monster(getPoint(newMonsterPathIdx, null, path))));
+                            newMonster));
 
             // 터렛에 의한 피격처리
             int plusGold = turretAttackProcess();
@@ -271,6 +276,13 @@ public class GameManager {
                         blueCurrent.addAll(redTemp.subList(1, redTemp.size()));
                         blueCurrent.addAll(blueTemp.subList(1, blueTemp.size()));
 
+//                        for (int i = 1; i < redCurrent.size(); i++) {
+//                            System.out.print("[" + redCurrent.get(i).monster.getPoint().x + ", " + redCurrent.get(i).monster.getPoint().y + "]  ");
+//                        }
+//                        System.out.println("\n--------");
+
+//                        if (redCurrent.size() >= 30) System.exit(-1);
+
                         synchronized (redObjOs) {
                             synchronized (blueObjOs) {
                                 try {
@@ -279,6 +291,8 @@ public class GameManager {
 
                                     redObjOs.flush();
                                     blueObjOs.flush();
+
+                                    sleep(1000);
                                 } catch (Exception e) {
                                     System.out.println("몬스터 데이터 전송 실패");
                                 }
