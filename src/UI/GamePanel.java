@@ -479,27 +479,35 @@ public class GamePanel extends MultiRoomJPanel {
 //		}
 
 		// List<Turret> myTurrets의 모든 Point에 포탑 이미지 그리기
-		for (Turret turret : myTurrets) {
-			if (turret.getLevel() == 0) { // 포탑 레벨이 0 -> 잔디 그리기
-				g.drawImage(grassImage, turret.getPoint().x, turret.getPoint().y, this);
-			} else {
-				Image turretImage = getTurretImagByLevel(turret.getLevel());
-				g.drawImage(turretImage, turret.getPoint().x, turret.getPoint().y, this);
+		synchronized (myTurrets) {
+			
+			for (Turret turret : myTurrets) {
+				if (turret.getLevel() == 0) { // 포탑 레벨이 0 -> 잔디 그리기
+					g.drawImage(grassImage, turret.getPoint().x, turret.getPoint().y, this);
+				} else {
+					Image turretImage = getTurretImagByLevel(turret.getLevel());
+					g.drawImage(turretImage, turret.getPoint().x, turret.getPoint().y, this);
+				}
 			}
 		}
 		// List<Turret> enemyTurrets의 모든 Point에 포탑 이미지 그리기
-		for (Turret turret : enemyTurrets) {
-			if (turret.getLevel() == 0) { // 포탑 레벨이 0 -> 잔디 그리기
-				g.drawImage(grassImage, turret.getPoint().x, turret.getPoint().y, this);
-			} else {
-				Image turretImage = getTurretImagByLevel(turret.getLevel());
-				g.drawImage(turretImage, turret.getPoint().x, turret.getPoint().y, this);
+		synchronized (enemyTurrets) {
+			
+			for (Turret turret : enemyTurrets) {
+				if (turret.getLevel() == 0) { // 포탑 레벨이 0 -> 잔디 그리기
+					g.drawImage(grassImage, turret.getPoint().x, turret.getPoint().y, this);
+				} else {
+					Image turretImage = getTurretImagByLevel(turret.getLevel());
+					g.drawImage(turretImage, turret.getPoint().x, turret.getPoint().y, this);
+				}
 			}
 		}
 
 		// List<Point> monsters의 모든 Point에 몬스터 이미지 그리기
-		for (Point monster : monsters) {
-			g.drawImage(monsterImage, monster.x, monster.y, this);
+		synchronized (monsters) {
+			for (Point monster : monsters) {
+				g.drawImage(monsterImage, monster.x, monster.y, this);
+			}
 		}
 	}
 
@@ -589,6 +597,7 @@ public class GamePanel extends MultiRoomJPanel {
 //			this.objIs = objIs;
 //		}
 		public ClientReceiver() {
+			turrets = new ArrayList<>();
 		}
 
 		@Override
@@ -629,7 +638,7 @@ public class GamePanel extends MultiRoomJPanel {
 								System.out.println(packet.getPayload());
 							}
 
-							objIs.reset();
+//							objIs.reset();
 						}
 					}
 
