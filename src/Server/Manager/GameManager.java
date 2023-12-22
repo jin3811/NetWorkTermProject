@@ -50,7 +50,12 @@ public class GameManager {
 //        games.get(roomNum).start();
     	GameSession session = games.get(roomNum);
         if (session != null && !session.isRunning()) {
-            session.start();
+            try{
+                session.start();
+            }
+            catch(IllegalThreadStateException e1) {
+                System.out.println("게임이 이미 시작됨");
+            }
         }
     }
 
@@ -159,7 +164,7 @@ public class GameManager {
 
             // 각 터렛에 대해 실행
             for (Turret turret : turrets) {
-                if (turret.getLevel() > 0) { // 0 레벨은 공격 불가
+                if (turret.getLevel() > 0 && turret.getTeam() == user.getTeam()) { // 0 레벨은 공격 불가
                     MonsterPosPair target = findClosestMonster(turret.getPoint());
                     if (target != null) {
                         // 몬스터 공격 로직
@@ -302,14 +307,17 @@ public class GameManager {
                         blueTemp = blue.monsterProcess(bluePath);
 
                         redCurrent.add(redTemp.get(0));
-                        redCurrent.addAll(redTemp.subList(1, redTemp.size()));
-                        redCurrent.addAll(blueTemp.subList(1, blueTemp.size()));
-
                         blueCurrent.add(blueTemp.get(0));
-                        blueCurrent.addAll(redTemp.subList(1, redTemp.size()));
-                        blueCurrent.addAll(blueTemp.subList(1, blueTemp.size()));
-              
-                       
+
+                        redTemp.remove(0);
+                        blueTemp.remove(0);
+
+                        redCurrent.addAll(redTemp);
+                        redCurrent.addAll(blueTemp);
+
+                        blueCurrent.addAll(redTemp);
+                        blueCurrent.addAll(blueTemp);
+
 //                        synchronized (redObjOs) {
 //							try {
 //								 redObjOs.writeObject(new MOD(MODE.PNT_MONSTER_MOD, new Vector<MonsterPosPair>(redCurrent)));
@@ -359,9 +367,16 @@ public class GameManager {
 //            						}
                                     
                                     redObjOs.flush();
-                                    blueObjOs.flush();                                    
+                                    blueObjOs.flush();
+
+                                    redObjOs.reset();
+                                    blueObjOs.reset();
+
+                                    redObjOs.writeObject(new MOD(MODE.MODIFY_LIFE, red.life));
+                                    blueObjOs.writeObject(new MOD(MODE.MODIFY_LIFE, blue.life));
+
                                     // 데이터 전송 후 대기시간 추가
-                                    sleep(500);
+                                    sleep(1000);
                                 } catch (Exception e) {
                                     System.out.println("몬스터 데이터 전송 실패");
                                 }
