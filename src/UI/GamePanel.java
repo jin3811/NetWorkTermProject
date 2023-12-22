@@ -526,11 +526,14 @@ public class GamePanel extends JPanel {
 		}
 
 		// List<Point> monsters의 모든 Point에 몬스터 이미지 그리기
-//		synchronized (monsters) {
+
+		synchronized (monsters) {
+			System.out.println("Monsters.size() : " + monsters.size());
+
 			for (Point monster : monsters) {
 				g.drawImage(monsterImage, monster.x, monster.y, this);
 			}
-//		}
+		}
 		
 	}
 
@@ -697,6 +700,21 @@ public class GamePanel extends JPanel {
 		            monsters.addAll(monsterPoints);
 		        }
 			}
+
+			synchronized (monsters) {
+				// 이제 monsterPoints에는 모든 몬스터의 위치 정보 존재
+				// 이 정보를 화면에 그리기 위한 monsters를 초기화 후 저장.
+				monsters.clear();
+//			for (int i = 1 ;
+//				 i < (10 <= monsterPoints.size() ? 10 : monsterPoints.size()) ;
+//				 i++) {
+//				System.out.print(monsterPoints.get(i) + " ");
+//				if (i % 5 == 0) System.out.println();
+//			}
+//			System.out.println("\n---------------");
+				monsters.addAll(monsterPoints);
+			}
+
 		}
 //		// 터렛 위치 업데이트하는 메서드
 //		private void updateTurretLocation(Point newTurretLocation) {
