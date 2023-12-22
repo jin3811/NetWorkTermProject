@@ -65,6 +65,9 @@ public class GamePanel extends JPanel {
 
 	private TEAM team;
 
+	private JLabel goldLabel;
+	private JLabel teamLabel;
+	private JLabel lifeLabel;
 	// 추가중..
 	private Thread clientReceiverThread;
 	// 포탑 설치구역 가지는 객체
@@ -92,6 +95,7 @@ public class GamePanel extends JPanel {
 //	List<Point> turrets2 = new ArrayList<>();
 	// 클라이언트단 골드
 	private int gold;
+	private int life;
 	private static final int MAX_LEVEL = 3;
 	// ...
 
@@ -103,7 +107,7 @@ public class GamePanel extends JPanel {
 		this.roomNum = roomNum;
 		this.team = team;
 		this.gold = 100;
-		
+		this.life = 10;
 		
 		
 		
@@ -128,11 +132,33 @@ public class GamePanel extends JPanel {
 		// ..
 
 		System.out.println("GamePanel 입장");
-		context.setSize(1000, 1000);
+		context.setSize(1220, 1050);
 //        setPreferredSize(new Dimension(1000, 1000));
 //        context.pack();
 		setLayout(new BorderLayout());
 
+		// UI 컴포넌트를 추가하기 위한 패널
+	    JPanel statusPanel = new JPanel();
+	    statusPanel.setLayout(new BoxLayout(statusPanel, BoxLayout.Y_AXIS)); // 상하 정렬을 위한 BoxLayout 설정
+	    statusPanel.setPreferredSize(new Dimension(200, 1000)); // 패널의 크기 설정
+
+	    // 팀 정보를 표시할 라벨
+	    teamLabel = new JLabel("Team: " + (this.team == TEAM.RED ? "Red" : "Blue"));
+	    statusPanel.add(teamLabel);
+
+	    // 골드를 표시할 라벨
+	    goldLabel = new JLabel("Gold: " + this.gold);
+	    statusPanel.add(goldLabel);
+
+	    
+	    lifeLabel = new JLabel("Life: "+ this.life);
+	    statusPanel.add(lifeLabel);
+	    // 상태 패널을 GamePanel에 추가
+	    this.add(statusPanel, BorderLayout.EAST);
+
+	    // 게임 상태(골드, 팀 정보 등)를 업데이트하는 메소드
+	    updateGameStatus();
+		
 		for (int i = 0; i < 1000; i += 50) {
 			for (int j = 0; j < 1000; j += 50) {
 				Point p = new Point(j, i);
@@ -370,7 +396,22 @@ public class GamePanel extends JPanel {
 		// 스레드 시작
 
 	}
+	// 게임 상태를 업데이트
+	public void updateGameStatus() {
+		// 팀 라벨의 텍스트 업데이트
+		teamLabel.setText("Team: " + (this.team == TEAM.RED ? "Red" : "Blue"));
 
+		// 골드 라벨의 텍스트 업데이트
+	    goldLabel.setText("Gold: " + this.gold);
+
+	    // 라이프 라벨 텍스트 업데이트
+	    lifeLabel.setText("Life: "+ this.life);
+	    
+	    // UI를 다시 그리도록 요청
+	    teamLabel.repaint();
+	    goldLabel.repaint();
+	    lifeLabel.repaint();
+	}
 	// 서버에 객체 전송
 	private void sendMessageToServer(MODE mode, Object payload) {
 		// TODO Auto-generated method stub
@@ -703,6 +744,7 @@ public class GamePanel extends JPanel {
 //								gold += monstersInfo.get(0).idx;
 								// 몬스터의 위치 정보 업데이트
 								updateMonsters(monstersInfo);
+								updateGameStatus(); // 골드, 팀 상태 업데이트
 								repaint();
 								break;
 							case TEST_MOD:
