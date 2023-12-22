@@ -372,8 +372,8 @@ public class GameManager {
                                     redObjOs.reset();
                                     blueObjOs.reset();
 
-                                    redObjOs.writeObject(new MOD(MODE.MODIFY_LIFE, red.life));
-                                    blueObjOs.writeObject(new MOD(MODE.MODIFY_LIFE, blue.life));
+                                    redObjOs.writeObject(new MOD(MODE.MODIFY_LIFE_MOD, red.life));
+                                    blueObjOs.writeObject(new MOD(MODE.MODIFY_LIFE_MOD, blue.life));
 
                                     // 데이터 전송 후 대기시간 추가
                                     sleep(1000);
