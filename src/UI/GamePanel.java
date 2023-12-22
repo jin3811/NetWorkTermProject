@@ -62,6 +62,8 @@ public class GamePanel extends JPanel {
 	private ObjectInputStream objIs;
 	private Socket socket;
 	private long roomNum;
+	
+	private String endGameMessage = null;
 
 	private TEAM team;
 
@@ -396,6 +398,10 @@ public class GamePanel extends JPanel {
 		// 스레드 시작
 
 	}
+	public void displayEndGameMessage(String message) {
+			this.endGameMessage = message;
+			repaint();
+	}
 	// 게임 상태를 업데이트
 	public void updateGameStatus() {
 		// 팀 라벨의 텍스트 업데이트
@@ -560,6 +566,8 @@ public class GamePanel extends JPanel {
 		drawGame(bufferGraphics);
 		// 버퍼 이미지를 화면에 그리기
 		g.drawImage(bufferImage, 0, 0, this);
+		
+		
 		// List<Turret> myTurrets의 모든 Point에 포탑 이미지 그리기
 	
 		// List<Turret> enemyTurrets의 모든 Point에 포탑 이미지 그리기
@@ -589,6 +597,18 @@ public class GamePanel extends JPanel {
 		drawTurrets(g, myTurrets);
 		drawTurrets(g, enemyTurrets);
 		drawMonsters(g);
+		if (endGameMessage != null) {
+            g.setColor(new Color(0, 0, 0, 128));
+            g.fillRect(0, 0, getWidth(), getHeight());
+
+            // Draw the end game message
+            g.setColor(Color.WHITE);
+            g.setFont(new Font("Arial", Font.BOLD, 64));
+            FontMetrics fm = g.getFontMetrics();
+            int x = (getWidth() - fm.stringWidth(endGameMessage)) / 2;
+            int y = (getHeight() - fm.getHeight()) / 2 + fm.getAscent();
+            g.drawString(endGameMessage, x, y);
+        }
 	}
 	private void drawTurrets(Graphics g, CopyOnWriteArrayList<Turret> turrets) {
 		synchronized (turrets) {
@@ -696,6 +716,7 @@ public class GamePanel extends JPanel {
 		private List<Turret> turrets;
 		MOD packet;
 		int dropGold;
+		String teamColor;
 //		public ClientReceiver(ObjectInputStream objIs) {
 //			this.objIs = objIs;
 //		}
@@ -753,6 +774,16 @@ public class GamePanel extends JPanel {
 								life = remainLife;
 								updateGameStatus();
 								repaint();
+								break;
+							case GAME_WIN_MOD:
+								teamColor = (team ==TEAM.RED)? "레드팀":"블루팀";
+								System.out.println(teamColor+": "+"게임에서 승리하였습니다!");
+	                            displayEndGameMessage(teamColor+": "+"게임에서 승리하였습니다!");
+								break;
+							case GAME_LOSE_MOD:
+								teamColor = (team ==TEAM.RED)? "레드팀":"블루팀";
+								System.out.println(teamColor+": "+"게임에서 패배하였습니다!");
+	                            displayEndGameMessage(teamColor+": "+"게임에서 패배하였습니다..");
 								break;
 							case TEST_MOD:
 								System.out.println(packet.getPayload());
