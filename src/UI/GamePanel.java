@@ -330,6 +330,10 @@ public class GamePanel extends JPanel {
 						sendMessageToServer(MODE.TURRET_UPDATE_MOD, new ArrayList<Turret>(myTurrets));
 						System.out.println(team + "업데이트 요청함");
 					}
+					for(Turret t: myTurrets) {
+						System.out.println("터렛 업글 정보: "+ t.getLevel());
+					}
+					System.out.println("====================");
 				}
 //				// 포탑 설치 가능 구역 클릭 시
 //				if (!isTurretPresent(turretPoint) && isValidTurretPlacement(turretPoint, team)) {
@@ -349,6 +353,7 @@ public class GamePanel extends JPanel {
 		synchronized (objOs) {
 
 			try {
+				objOs.reset();
 				objOs.writeObject(new MOD(MODE.GAME_START_MOD, roomNum));
 				objOs.flush();
 				
@@ -372,6 +377,7 @@ public class GamePanel extends JPanel {
 		synchronized (objOs) {
 			try {
 				if (objOs != null) {
+					objOs.reset();
 					objOs.writeObject(new MOD(mode, payload));
 					objOs.flush();
 				}
@@ -558,7 +564,7 @@ public class GamePanel extends JPanel {
 
 	private void drawMonsters(Graphics g) {
 		synchronized (monsters) {
-			System.out.println("Monsters.size() : " + monsters.size());
+//			System.out.println("Monsters.size() : " + monsters.size());
 	
 			for (Point monster : monsters) {
 				g.drawImage(monsterImage, monster.x, monster.y, this);
@@ -727,10 +733,10 @@ public class GamePanel extends JPanel {
 				synchronized (monsters) { // Synchronize on monsters to avoid concurrent modification
 					monsters.clear();
 					monsters.addAll(monsterPoints);
-					for(Point p : monsterPoints) {
-						System.out.println("p: ["+p.x+","+p.y+"]");
-					}
-					System.out.println("===========================");
+//					for(Point p : monsterPoints) {
+//						System.out.println("p: ["+p.x+","+p.y+"]");
+//					}
+//					System.out.println("===========================");
 				}
 			}
 
