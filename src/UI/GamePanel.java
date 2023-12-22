@@ -747,6 +747,13 @@ public class GamePanel extends JPanel {
 								updateGameStatus(); // 골드, 팀 상태 업데이트
 								repaint();
 								break;
+							case MODIFY_LIFE_MOD:
+								int remainLife = (int) packet.getPayload();
+								System.out.println("남은 라이프: "+ remainLife);
+								life = remainLife;
+								updateGameStatus();
+								repaint();
+								break;
 							case TEST_MOD:
 								System.out.println(packet.getPayload());
 								break;
