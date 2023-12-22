@@ -650,6 +650,12 @@ public class GamePanel extends JPanel {
 							case PNT_MONSTER_MOD:
 								// 1. Vector<MonsterPosPair>을 꺼낸다
 								Vector<MonsterPosPair> monstersInfo = (Vector<MonsterPosPair>) packet.getPayload();
+								
+								// 서버로부터 받은 값은 계속 똑같은 문제가 있습니다.
+//								for(int i=1;i<monstersInfo.size();i++) {
+//									System.out.println("point: ["+monstersInfo.get(i).monster.getPoint().x+", "+ monstersInfo.get(i).monster.getPoint().y+"]");
+//								}
+								
 								// 2. 골드 꺼낸다(몬스터 잡아 얻은)
 								gold += monstersInfo.get(0).idx;
 								// 몬스터의 위치 정보 업데이트
@@ -658,6 +664,7 @@ public class GamePanel extends JPanel {
 								break;
 							case TEST_MOD:
 								System.out.println(packet.getPayload());
+								break;
 							}
 
 //							objIs.reset();
@@ -674,17 +681,22 @@ public class GamePanel extends JPanel {
 
 		private void updateMonsters(Vector<MonsterPosPair> monstersInfo) {
 			// monstersInfo에서 몬스터 위치 정보를 추출하여 그리기 위한 몬스터 목록을 업데이트합니다.
-			List<Point> monsterPoints = new ArrayList<>();
-			for (MonsterPosPair monsterPair : monstersInfo) {
-				if (monsterPair.monster != null) {
-					monsterPoints.add(monsterPair.monster.getPoint());
-//					System.out.println(monsterPair.monster.getPoint());
+			CopyOnWriteArrayList<Point> monsterPoints = new CopyOnWriteArrayList<>();
+			synchronized (monsterPoints) {
+				
+				for (MonsterPosPair monsterPair : monstersInfo) {
+					if (monsterPair.monster != null) {
+						monsterPoints.add(monsterPair.monster.getPoint());
+	//					System.out.println(monsterPair.monster.getPoint());
+					}
 				}
+				// 이제 monsterPoints에는 모든 몬스터의 위치 정보 존재
+				// 이 정보를 화면에 그리기 위한 monsters를 초기화 후 저장.
+				synchronized (monsters) { // Synchronize on monsters to avoid concurrent modification
+		            monsters.clear();
+		            monsters.addAll(monsterPoints);
+		        }
 			}
-			// 이제 monsterPoints에는 모든 몬스터의 위치 정보 존재
-			// 이 정보를 화면에 그리기 위한 monsters를 초기화 후 저장.
-			monsters.clear();
-			monsters.addAll(monsterPoints);
 		}
 //		// 터렛 위치 업데이트하는 메서드
 //		private void updateTurretLocation(Point newTurretLocation) {

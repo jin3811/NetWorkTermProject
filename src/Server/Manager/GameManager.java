@@ -250,16 +250,25 @@ public class GameManager {
         }
 
         private class MonsterUpdateThread extends Thread {
-
+        	Vector<MonsterPosPair> redCurrent, blueCurrent, redTemp, blueTemp;
+        	
+            public MonsterUpdateThread() {
+            	redCurrent = new Vector<MonsterPosPair>();
+                blueCurrent = new Vector<MonsterPosPair>();
+                redTemp = new Vector<MonsterPosPair>();
+                blueTemp = new Vector<MonsterPosPair>();
+            }
             @Override
             public void run() {
-                Vector<MonsterPosPair> redCurrent, blueCurrent, redTemp, blueTemp;
 
                 try {
                     sleep(2000);
                     while(true){
-                        redCurrent = new Vector<>();
-                        blueCurrent = new Vector<>();
+                     	redCurrent.clear();
+                    	blueCurrent.clear();
+                    	redTemp.clear();
+                    	blueTemp.clear();
+                    	
                         redTemp = red.monsterProcess(redPath);
                         blueTemp = blue.monsterProcess(bluePath);
 
@@ -270,13 +279,46 @@ public class GameManager {
                         blueCurrent.add(blueTemp.get(0));
                         blueCurrent.addAll(redTemp.subList(1, redTemp.size()));
                         blueCurrent.addAll(blueTemp.subList(1, blueTemp.size()));
-
+                        
+                        
+                       
+//                        synchronized (redObjOs) {
+//							try {
+//								 redObjOs.writeObject(new MOD(MODE.PNT_MONSTER_MOD, new Vector<MonsterPosPair>(redCurrent)));
+//								 redObjOs.flush();
+//							}catch (Exception e) {
+//								// TODO: handle exception
+//								e.printStackTrace();
+//							}
+//						}
+//                        
+//                        synchronized (blueObjOs) {
+//                        	try {
+//								 blueObjOs.writeObject(new MOD(MODE.PNT_MONSTER_MOD, new Vector<MonsterPosPair>(blueCurrent)));
+//								 blueObjOs.flush();
+//							}catch (Exception e) {
+//								// TODO: handle exception
+//								e.printStackTrace();
+//							}
+//						}
+                        
                         synchronized (redObjOs) {
                             synchronized (blueObjOs) {
                                 try {
+                                	redObjOs.reset();
+                                	blueObjOs.reset();
                                     redObjOs.writeObject(new MOD(MODE.PNT_MONSTER_MOD, new Vector<MonsterPosPair>(redCurrent)));
                                     blueObjOs.writeObject(new MOD(MODE.PNT_MONSTER_MOD, new Vector<MonsterPosPair>(blueCurrent)));
-
+                                    
+                                    // 이 부분 확인해 본 결과 서버에서는 보내주는 몬스터의 위치값이 계속 변경처리가 되고 있는 것 같습니다.
+                                    // GamePanel 부분 ClientReceiver 클래스의 run 부분에서 이를 받고있습니다.
+//                                    for(int i=1;i<redCurrent.size();i++) {
+//            							System.out.println("red point: ["+redCurrent.get(i).monster.getPoint().x+", "+ redCurrent.get(i).monster.getPoint().y+"]");
+//            						}
+//                                    for(int i=1;i<blueCurrent.size();i++) {
+//            							System.out.println("blue point: ["+blueCurrent.get(i).monster.getPoint().x+", "+ blueCurrent.get(i).monster.getPoint().y+"]");
+//            						}
+                                    
                                     redObjOs.flush();
                                     blueObjOs.flush();
                                 } catch (Exception e) {
