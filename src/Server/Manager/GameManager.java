@@ -321,6 +321,9 @@ public class GameManager {
                                     
                                     redObjOs.flush();
                                     blueObjOs.flush();
+                                    
+                                    // 데이터 전송 후 대기시간 추가
+                                    sleep(1000);
                                 } catch (Exception e) {
                                     System.out.println("몬스터 데이터 전송 실패");
                                 }

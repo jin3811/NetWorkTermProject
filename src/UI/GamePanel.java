@@ -526,11 +526,11 @@ public class GamePanel extends JPanel {
 		}
 
 		// List<Point> monsters의 모든 Point에 몬스터 이미지 그리기
-		synchronized (monsters) {
+//		synchronized (monsters) {
 			for (Point monster : monsters) {
 				g.drawImage(monsterImage, monster.x, monster.y, this);
 			}
-		}
+//		}
 		
 	}
 
