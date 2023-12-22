@@ -77,7 +77,7 @@ public class GameManager {
             life -= 1;
         }
 
-        public int getLife() {
+        public synchronized int getLife() {
             return life;
         }
         private Point getPoint(int idx, Point point, Object path) throws IndexOutOfBoundsException {
@@ -243,13 +243,16 @@ public class GameManager {
             Thread monsterUpdater = new MonsterUpdateThread();
             monsterUpdater.start();
 
+            System.out.println("씨빨");
             // 여기가 메인인데, 여기서 계속 승패판정 돌리다가, 걸리면 ㄱ둘다 인터럽트 걸고 꺼버리죠
             while(!isGameEnd());
-
+            System.out.println("game session - 승패 판정 남");
+            // 게임 종료시 스레드가 종료되었음을 표시
+            isRunning = false;
             monsterUpdater.interrupt(); // 게임 끝남
 
             // 클라들한테 메세지 보내기
-            Player winner = red.getLife() == 0 ? red : blue;
+            Player winner = red.getLife() != 0 ? red : blue;
             Player losser = red == winner ? blue : red;
 
             ObjectOutputStream winOS = winner.user.getObjOutputStream();
@@ -270,14 +273,12 @@ public class GameManager {
                 }
             }
             System.out.println("게임 끝");
-            // 게임 종료시 스레드가 종료되었음을 표시
-            isRunning = false;
         }
         public boolean isRunning() {
         	return isRunning;
         }
         public boolean isGameEnd() {
-            return red.getLife() == 0 || blue.getLife() == 0;
+            return red.getLife() <= 0 || blue.getLife() <= 0;
         }
         public synchronized Player getPlayer(int uid) {
             return red.user.getUserID() == uid ? red : blue;
@@ -295,14 +296,16 @@ public class GameManager {
             @Override
             public void run() {
 
-                try {
-                    sleep(2000);
-                    while(true){
-                     	redCurrent.clear();
+                while(isRunning) {
+                    try{
+                        // 데이터 전송 후 대기시간 추가
+                        sleep(1000);
+
+                        redCurrent.clear();
                     	blueCurrent.clear();
                     	redTemp.clear();
                     	blueTemp.clear();
-                    	
+
                         redTemp = red.monsterProcess(redPath);
                         blueTemp = blue.monsterProcess(bluePath);
 
@@ -327,7 +330,7 @@ public class GameManager {
 //								e.printStackTrace();
 //							}
 //						}
-//                        
+//
 //                        synchronized (blueObjOs) {
 //                        	try {
 //								 blueObjOs.writeObject(new MOD(MODE.PNT_MONSTER_MOD, new Vector<MonsterPosPair>(blueCurrent)));
@@ -337,7 +340,7 @@ public class GameManager {
 //								e.printStackTrace();
 //							}
 //						}
-                        
+
 
 
 //                        for (int i = 1; i < redCurrent.size(); i++) {
@@ -355,7 +358,7 @@ public class GameManager {
                                 	blueObjOs.reset();
                                     redObjOs.writeObject(new MOD(MODE.PNT_MONSTER_MOD, new Vector<MonsterPosPair>(redCurrent)));
                                     blueObjOs.writeObject(new MOD(MODE.PNT_MONSTER_MOD, new Vector<MonsterPosPair>(blueCurrent)));
-                                    
+
                                     // 이 부분 확인해 본 결과 서버에서는 보내주는 몬스터의 위치값이 계속 변경처리가 되고 있는 것 같습니다.
                                     // GamePanel 부분 ClientReceiver 클래스의 run 부분에서 이를 받고있습니다.
 //                                    for(int i=1;i<redCurrent.size();i++) {
@@ -365,7 +368,7 @@ public class GameManager {
 //                                    for(int i=1;i<blueCurrent.size();i++) {
 //            							System.out.println("blue point: ["+blueCurrent.get(i).monster.getPoint().x+", "+ blueCurrent.get(i).monster.getPoint().y+"]");
 //            						}
-                                    
+
                                     redObjOs.flush();
                                     blueObjOs.flush();
 
@@ -374,18 +377,16 @@ public class GameManager {
 
                                     redObjOs.writeObject(new MOD(MODE.MODIFY_LIFE_MOD, red.life));
                                     blueObjOs.writeObject(new MOD(MODE.MODIFY_LIFE_MOD, blue.life));
-
-                                    // 데이터 전송 후 대기시간 추가
-                                    sleep(1000);
                                 } catch (Exception e) {
                                     System.out.println("몬스터 데이터 전송 실패");
                                 }
                             }
                         }
                     }
-                } catch (InterruptedException e){
-                    System.out.println("승패 판정으로 인한 몹 업뎃 중단");
-                    throw new RuntimeException(e);
+                    catch (InterruptedException e){
+                        System.out.println("승패 판정으로 인한 몹 업뎃 중단");
+                        break;
+                    }
                 }
             }
         }
