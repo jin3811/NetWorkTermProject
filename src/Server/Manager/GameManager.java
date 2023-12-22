@@ -243,7 +243,6 @@ public class GameManager {
             Thread monsterUpdater = new MonsterUpdateThread();
             monsterUpdater.start();
 
-            System.out.println("씨빨");
             // 여기가 메인인데, 여기서 계속 승패판정 돌리다가, 걸리면 ㄱ둘다 인터럽트 걸고 꺼버리죠
             while(!isGameEnd());
             System.out.println("game session - 승패 판정 남");

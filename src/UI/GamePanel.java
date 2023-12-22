@@ -402,7 +402,7 @@ public class GamePanel extends JPanel {
 			this.endGameMessage = message;
 			repaint();
 	}
-	// 게임 상태를 업데이트
+	// teamLabel, goldLabel, lifeLabel을 다시 그려주는 부분
 	public void updateGameStatus() {
 		// 팀 라벨의 텍스트 업데이트
 		teamLabel.setText("Team: " + (this.team == TEAM.RED ? "Red" : "Blue"));
@@ -413,12 +413,13 @@ public class GamePanel extends JPanel {
 	    // 라이프 라벨 텍스트 업데이트
 	    lifeLabel.setText("Life: "+ this.life);
 	    
-	    // UI를 다시 그리도록 요청
+	    // Label을 다시 그리도록 요청
 	    teamLabel.repaint();
 	    goldLabel.repaint();
 	    lifeLabel.repaint();
 	}
-	// 서버에 객체 전송
+	
+	// 서버에 객체 전송하는 메서드
 	private void sendMessageToServer(MODE mode, Object payload) {
 		// TODO Auto-generated method stub
 		synchronized (objOs) {
@@ -436,7 +437,7 @@ public class GamePanel extends JPanel {
 	}
 
 	// 현재 클릭된 위치의 터렛이 업그레이드 가능한지 확인
-	//
+	// 가능한 상태이면 골드 차감
 	private boolean isCanUpgrade(Turret existingTurret) {
 		int level = existingTurret.getLevel();
 
@@ -564,8 +565,20 @@ public class GamePanel extends JPanel {
 		}
 		// 게임 그리기
 		drawGame(bufferGraphics);
-		// 버퍼 이미지를 화면에 그리기
-		g.drawImage(bufferImage, 0, 0, this);
+		// 게임 종료 문구 설정
+	    if (endGameMessage != null) {
+	        bufferGraphics.setColor(new Color(0, 0, 0, 128));
+	        bufferGraphics.fillRect(0, 0, getWidth(), getHeight());
+	        bufferGraphics.setColor(Color.WHITE);
+	        bufferGraphics.setFont(new Font("Arial", Font.BOLD, 64));
+	        FontMetrics fm = bufferGraphics.getFontMetrics();
+	        int x = (getWidth() - fm.stringWidth(endGameMessage)) / 2;
+	        int y = ((getHeight() - fm.getHeight()) / 2) + fm.getAscent();
+	        bufferGraphics.drawString(endGameMessage, x, y);
+	    }
+
+	    // 버퍼 이미지를 화면에 그리기
+	    g.drawImage(bufferImage, 0, 0, this);
 		
 		
 		// List<Turret> myTurrets의 모든 Point에 포탑 이미지 그리기
@@ -597,18 +610,17 @@ public class GamePanel extends JPanel {
 		drawTurrets(g, myTurrets);
 		drawTurrets(g, enemyTurrets);
 		drawMonsters(g);
-		if (endGameMessage != null) {
-            g.setColor(new Color(0, 0, 0, 128));
-            g.fillRect(0, 0, getWidth(), getHeight());
-
-            // Draw the end game message
-            g.setColor(Color.WHITE);
-            g.setFont(new Font("Arial", Font.BOLD, 64));
-            FontMetrics fm = g.getFontMetrics();
-            int x = (getWidth() - fm.stringWidth(endGameMessage)) / 2;
-            int y = (getHeight() - fm.getHeight()) / 2 + fm.getAscent();
-            g.drawString(endGameMessage, x, y);
-        }
+//		if (endGameMessage != null) {
+//            g.setColor(new Color(0, 0, 0, 128));
+//            g.fillRect(0, 0, getWidth(), getHeight());
+//
+//            g.setColor(Color.WHITE);
+//            g.setFont(new Font("Arial", Font.BOLD, 64));
+//            FontMetrics fm = g.getFontMetrics();
+//            int x = (getWidth() - fm.stringWidth(endGameMessage)) / 2;
+//            int y = (getHeight() - fm.getHeight()) / 2 + fm.getAscent();
+//            g.drawString(endGameMessage, x, y);
+//        }
 	}
 	private void drawTurrets(Graphics g, CopyOnWriteArrayList<Turret> turrets) {
 		synchronized (turrets) {
