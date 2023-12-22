@@ -27,17 +27,31 @@ public class GameManager {
     }
 
     public synchronized void addGame(Room r, long roomNum) {
+    	// 해당 roomNum에 대한 GameSession이 존재하는지 확인
+    	if(games.containsKey(roomNum)) {
+    		//이미 존재하는 경우에는 아무것도 안함.
+    		return;
+    	}
+    	// 존재하지 않는 경우, 새로운 GameSession을 만들어 맵에 추가
         UserService manager = this.server.userManager.getUserbyId(r.getManagerId());
         UserService player = this.server.userManager.getUserbyId(r.getPlayerId());
 
-        games.put(roomNum, new GameSession(
-                new Player(manager),
-                new Player(player)
-        ));
+        GameSession newSession = new GameSession(new Player(manager), new Player(player));
+        // putIfAbsent를 사용하여 이미 존재하는 경우에는 추가하지 않음
+        games.putIfAbsent(roomNum, newSession);
+        // 여기가 GameSession을 시작하는 부분 - addGame이 두번 호출되지는 않았는지 체크할 필요 o
+//        games.put(roomNum, new GameSession(
+//                new Player(manager),
+//                new Player(player)
+//        ));
     }
 
     public void startGame(long roomNum) {
-        games.get(roomNum).start();
+//        games.get(roomNum).start();
+    	GameSession session = games.get(roomNum);
+        if (session != null && !session.isRunning()) {
+            session.start();
+        }
     }
 
     public class Player {
@@ -195,7 +209,8 @@ public class GameManager {
         private ObjectOutputStream redObjOs;
         private Player blue;
         private ObjectOutputStream blueObjOs;
-
+        
+        private volatile boolean isRunning = false; // 스레드 실행 상태를 추적하는 플래그
         public GameSession(Player red, Player blue) {
             this.red = red;
             this.blue = blue;
@@ -215,6 +230,11 @@ public class GameManager {
          */
         @Override
         public void run() {
+        	if(isRunning) {
+        		// 실행중이면 새 스레드 실행 절대 안시킨다.
+        		return;
+        	}
+        	isRunning = true; // 실행 중인게 없다면 스레드가 실행중임을 표시한다.
             Thread monsterUpdater = new MonsterUpdateThread();
             monsterUpdater.start();
 
@@ -245,8 +265,12 @@ public class GameManager {
                 }
             }
             System.out.println("게임 끝");
+            // 게임 종료시 스레드가 종료되었음을 표시
+            isRunning = false;
         }
-
+        public boolean isRunning() {
+        	return isRunning;
+        }
         public boolean isGameEnd() {
             return red.getLife() == 0 || blue.getLife() == 0;
         }
@@ -329,6 +353,7 @@ public class GameManager {
 //                                    for(int i=1;i<redCurrent.size();i++) {
 //            							System.out.println("red point: ["+redCurrent.get(i).monster.getPoint().x+", "+ redCurrent.get(i).monster.getPoint().y+"]");
 //            						}
+//                                    System.out.println("==============================");
 //                                    for(int i=1;i<blueCurrent.size();i++) {
 //            							System.out.println("blue point: ["+blueCurrent.get(i).monster.getPoint().x+", "+ blueCurrent.get(i).monster.getPoint().y+"]");
 //            						}
@@ -336,7 +361,7 @@ public class GameManager {
                                     redObjOs.flush();
                                     blueObjOs.flush();                                    
                                     // 데이터 전송 후 대기시간 추가
-                                    sleep(1000);
+                                    sleep(500);
                                 } catch (Exception e) {
                                     System.out.println("몬스터 데이터 전송 실패");
                                 }

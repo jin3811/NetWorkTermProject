@@ -22,6 +22,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.image.BufferedImage;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -49,6 +50,9 @@ public class GamePanel extends JPanel {
 	private Image turret2Image;
 	private Image turret3Image;
 	private Image monsterImage;
+	// 더블 버퍼링 코드
+	private Image bufferImage;
+	private Graphics bufferGraphics; 
 
 	List<Point> allPoints = new ArrayList<>();
 	List<Point> bluePath;
@@ -99,6 +103,10 @@ public class GamePanel extends JPanel {
 		this.roomNum = roomNum;
 		this.team = team;
 		this.gold = 100;
+		
+		
+		
+		
 		if(objOs==null)
 			System.out.println("objOs가 null");
 		else{
@@ -353,6 +361,7 @@ public class GamePanel extends JPanel {
 		clientReceiverThread.start();
 		setVisible(true);
 
+		
 		// 스레드 시작
 
 	}
@@ -485,25 +494,58 @@ public class GamePanel extends JPanel {
 	protected void paintComponent(Graphics g) {
 		super.paintComponent(g);
 		// 타일맵 : 잔디
+//		drawGrassBackground(g); // 잔디 구역
+//		drawRedTeam(g); // 레드팀 깃발
+//		drawBlueTeam(g); // 블루팀 깃발
+//		drawSpawner(g); // 스포너
+//		drawPath_red(g); // 레드팀 몬스터 통로
+//		drawPath_blue(g); // 블루팀 몬스터 통로
+//		drawTurrets(g, myTurrets); // 내 터렛
+//		drawTurrets(g, enemyTurrets); // 상대 터렛
+//		drawMonsters(g); // 몬스터
+		
+		// 버퍼 이미지 초기화
+		if(bufferImage == null) {
+			bufferImage = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_ARGB);
+			bufferGraphics = bufferImage.getGraphics();
+		}
+		// 게임 그리기
+		drawGame(bufferGraphics);
+		// 버퍼 이미지를 화면에 그리기
+		g.drawImage(bufferImage, 0, 0, this);
+		// List<Turret> myTurrets의 모든 Point에 포탑 이미지 그리기
+	
+		// List<Turret> enemyTurrets의 모든 Point에 포탑 이미지 그리기
+//		synchronized (enemyTurrets) {
+//			
+//			for (Turret turret : enemyTurrets) {
+//				if (turret.getLevel() == 0) { // 포탑 레벨이 0 -> 잔디 그리기
+//					g.drawImage(grassImage, turret.getPoint().x, turret.getPoint().y, this);
+//				} else {
+//					Image turretImage = getTurretImagByLevel(turret.getLevel());
+//					g.drawImage(turretImage, turret.getPoint().x, turret.getPoint().y, this);
+//				}
+//			}
+//		}
+
+		// List<Point> monsters의 모든 Point에 몬스터 이미지 그리기
+		
+	}
+	private void drawGame(Graphics g) {
 		drawGrassBackground(g); // 잔디 구역
 		drawRedTeam(g); // 레드팀 깃발
 		drawBlueTeam(g); // 블루팀 깃발
 		drawSpawner(g); // 스포너
 		drawPath_red(g); // 레드팀 몬스터 통로
 		drawPath_blue(g); // 블루팀 몬스터 통로
-
-		// List<Point> turrets의 모든 Point에 포탑 이미지 그리기
-//		for (Point turret : turrets) {
-//			g.drawImage(turret1Image, turret.x, turret.y, this);
-//		}
-		// List<Point> turrets2의 모든 Point에 포탑2(업그레이드) 이미지 그리기
-//		for (Point turret : turrets2) {
-//			g.drawImage(turret1Image, turret.x, turret.y, this);
-//		}
-
-		// List<Turret> myTurrets의 모든 Point에 포탑 이미지 그리기
-		synchronized (myTurrets) {
-			for (Turret turret : myTurrets) {
+		// 포탑과 몬스터
+		drawTurrets(g, myTurrets);
+		drawTurrets(g, enemyTurrets);
+		drawMonsters(g);
+	}
+	private void drawTurrets(Graphics g, CopyOnWriteArrayList<Turret> turrets) {
+		synchronized (turrets) {
+			for (Turret turret : turrets) {
 				if (turret.getLevel() == 0) { // 포탑 레벨이 0 -> 잔디 그리기
 					g.drawImage(grassImage, turret.getPoint().x, turret.getPoint().y, this);
 				} else {
@@ -512,29 +554,16 @@ public class GamePanel extends JPanel {
 				}
 			}
 		}
-		// List<Turret> enemyTurrets의 모든 Point에 포탑 이미지 그리기
-		synchronized (enemyTurrets) {
-			
-			for (Turret turret : enemyTurrets) {
-				if (turret.getLevel() == 0) { // 포탑 레벨이 0 -> 잔디 그리기
-					g.drawImage(grassImage, turret.getPoint().x, turret.getPoint().y, this);
-				} else {
-					Image turretImage = getTurretImagByLevel(turret.getLevel());
-					g.drawImage(turretImage, turret.getPoint().x, turret.getPoint().y, this);
-				}
-			}
-		}
+	}
 
-		// List<Point> monsters의 모든 Point에 몬스터 이미지 그리기
-
+	private void drawMonsters(Graphics g) {
 		synchronized (monsters) {
 			System.out.println("Monsters.size() : " + monsters.size());
-
+	
 			for (Point monster : monsters) {
 				g.drawImage(monsterImage, monster.x, monster.y, this);
 			}
 		}
-		
 	}
 
 	// 포탑 레벨에 따른 다른 터렛 이미지 반환
@@ -696,24 +725,28 @@ public class GamePanel extends JPanel {
 				// 이제 monsterPoints에는 모든 몬스터의 위치 정보 존재
 				// 이 정보를 화면에 그리기 위한 monsters를 초기화 후 저장.
 				synchronized (monsters) { // Synchronize on monsters to avoid concurrent modification
-		            monsters.clear();
-		            monsters.addAll(monsterPoints);
-		        }
+					monsters.clear();
+					monsters.addAll(monsterPoints);
+					for(Point p : monsterPoints) {
+						System.out.println("p: ["+p.x+","+p.y+"]");
+					}
+					System.out.println("===========================");
+				}
 			}
 
-			synchronized (monsters) {
-				// 이제 monsterPoints에는 모든 몬스터의 위치 정보 존재
-				// 이 정보를 화면에 그리기 위한 monsters를 초기화 후 저장.
-				monsters.clear();
-//			for (int i = 1 ;
-//				 i < (10 <= monsterPoints.size() ? 10 : monsterPoints.size()) ;
-//				 i++) {
-//				System.out.print(monsterPoints.get(i) + " ");
-//				if (i % 5 == 0) System.out.println();
+//			synchronized (monsters) {
+//				// 이제 monsterPoints에는 모든 몬스터의 위치 정보 존재
+//				// 이 정보를 화면에 그리기 위한 monsters를 초기화 후 저장.
+//				monsters.clear();
+////			for (int i = 1 ;
+////				 i < (10 <= monsterPoints.size() ? 10 : monsterPoints.size()) ;
+////				 i++) {
+////				System.out.print(monsterPoints.get(i) + " ");
+////				if (i % 5 == 0) System.out.println();
+////			}
+////			System.out.println("\n---------------");
+//				monsters.addAll(monsterPoints);
 //			}
-//			System.out.println("\n---------------");
-				monsters.addAll(monsterPoints);
-			}
 
 		}
 //		// 터렛 위치 업데이트하는 메서드
