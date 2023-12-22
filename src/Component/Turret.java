@@ -18,7 +18,7 @@ public class Turret implements Serializable {
 		this.point = point;
 		this.team = team;
 		this.level = 0;
-		this.atkPower = 10;
+		this.atkPower = 50;
 	}
 
 	public Point getPoint() {

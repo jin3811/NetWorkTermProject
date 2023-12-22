@@ -84,10 +84,10 @@ public class UserService extends Thread implements Serializable{
                         // 터렛 가져오기
                         List<Turret> updateTurret = (List<Turret>)receive.getPayload();
                         
-                        for(Turret t: updateTurret) {
-                        	System.out.println("터렛 업글 정보: "+ t.getLevel());
-                        }
-                        System.out.println("========================");
+//                        for(Turret t: updateTurret) {
+//                        	System.out.println("터렛 업글 정보: "+ t.getLevel());
+//                        }
+//                        System.out.println("========================");
                         // 자기 정보를 업데이트 한다.
                         GameManager.Player myPlayerInfo = gameRoom.getPlayer(this.id);
                         myPlayerInfo.updateTurret(new ArrayList<Turret>(updateTurret));

@@ -330,10 +330,10 @@ public class GamePanel extends JPanel {
 						sendMessageToServer(MODE.TURRET_UPDATE_MOD, new ArrayList<Turret>(myTurrets));
 						System.out.println(team + "업데이트 요청함");
 					}
-					for(Turret t: myTurrets) {
-						System.out.println("터렛 업글 정보: "+ t.getLevel());
-					}
-					System.out.println("====================");
+//					for(Turret t: myTurrets) {
+//						System.out.println("터렛 업글 정보: "+ t.getLevel());
+//					}
+//					System.out.println("====================");
 				}
 //				// 포탑 설치 가능 구역 클릭 시
 //				if (!isTurretPresent(turretPoint) && isValidTurretPlacement(turretPoint, team)) {
@@ -654,6 +654,7 @@ public class GamePanel extends JPanel {
 	class ClientReceiver extends Thread {
 		private List<Turret> turrets;
 		MOD packet;
+		int dropGold;
 //		public ClientReceiver(ObjectInputStream objIs) {
 //			this.objIs = objIs;
 //		}
@@ -695,7 +696,11 @@ public class GamePanel extends JPanel {
 //								}
 								
 								// 2. 골드 꺼낸다(몬스터 잡아 얻은)
-								gold += monstersInfo.get(0).idx;
+								dropGold = monstersInfo.get(0).idx;
+								System.out.println("dropGold: "+ dropGold);
+								gold+= dropGold;
+								System.out.println("gold: "+ gold);
+//								gold += monstersInfo.get(0).idx;
 								// 몬스터의 위치 정보 업데이트
 								updateMonsters(monstersInfo);
 								repaint();
