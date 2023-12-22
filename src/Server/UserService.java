@@ -23,6 +23,8 @@ public class UserService extends Thread implements Serializable{
     private Socket clientSocket;
     private Server server;
     private int id;
+
+    private TEAM team;
 //        private Vector<UserService> allUsers;
 
     public UserService(Server server, Socket clientSocket, int id) {
@@ -55,6 +57,7 @@ public class UserService extends Thread implements Serializable{
                     case CREATE_ROOM_MOD -> {
                         r = this.server.roomMananger.createRoom((String)receive.getPayload(), id);
                         System.out.println("id : " + id + " 방 생성 요청");
+                        team = TEAM.RED;
                     }
                     case GET_ROOM_MOD -> {
                         objOS.writeObject(new MOD(
@@ -66,6 +69,7 @@ public class UserService extends Thread implements Serializable{
                         String roomName = (String)receive.getPayload();
                         r = this.server.roomMananger.enterRoom(roomName, this.id);
                         System.out.println("id : " + id + " 방 참가 요청");
+                        team = TEAM.BLUE;
                     }
                     case GAME_START_MOD -> {
                         roomNum = (long)receive.getPayload();
@@ -124,5 +128,9 @@ public class UserService extends Thread implements Serializable{
 
     public int getUserID() {
         return id;
+    }
+
+    public TEAM getTeam() {
+        return team;
     }
 }
