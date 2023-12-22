@@ -37,9 +37,10 @@ import java.util.Vector;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.List;
 
-// 실제 게임을 진행하는 panel
+// 실제 게임을 진행하는 panel(클라이언트)
 public class GamePanel extends JPanel {
 	private RandomDefence context;
+	// 사용할 이미지들
 	private Image grassImage;
 	private Image pathImage1;
 	private Image pathImage2;
@@ -50,123 +51,116 @@ public class GamePanel extends JPanel {
 	private Image turret2Image;
 	private Image turret3Image;
 	private Image monsterImage;
-	// 더블 버퍼링 코드
-	private Image bufferImage;
-	private Graphics bufferGraphics; 
 
+	// 더블 버퍼링 용도
+	private Image bufferImage;
+	private Graphics bufferGraphics;
+
+	// 몬스터들이 이동하는 Point들의 List
 	List<Point> allPoints = new ArrayList<>();
 	List<Point> bluePath;
 	List<Point> redPath;
 
+	// 객체 입출력 스트림
 	private ObjectOutputStream objOs;
 	private ObjectInputStream objIs;
+
+	// 클라이언트 소켓
 	private Socket socket;
-	private long roomNum;
-	
+
+	// 팀, 골드, 생명을 표시할 라벨
+	private JLabel teamLabel;
+	private JLabel goldLabel;
+	private JLabel lifeLabel;
+
+	// 우측에 팀, 골드, 생명 표시할 Panel
+	private JPanel statusPanel;
+
+	private TEAM team; // 팀
+	private int gold; // 골드
+	private int life; // 체력
+	private static final int MAX_LEVEL = 3; // 터렛 최대 레벨
+
+	private long roomNum; // 방번호
+
+	// 게임 종료 시 띄울 메시지
 	private String endGameMessage = null;
 
-	private TEAM team;
-
-	private JLabel goldLabel;
-	private JLabel teamLabel;
-	private JLabel lifeLabel;
-	// 추가중..
+	// 클라이언트가 서버로부터 객체를 받기 위한 스레드
 	private Thread clientReceiverThread;
-	// 포탑 설치구역 가지는 객체
+
+	// 터렛 설치구역 가지는 싱글톤 객체
 	private BlueArea blueAreaInstance;
 	private RedArea redAreaInstance;
-	// 몬스터 이동구역 가지는 객체
+
+	// 몬스터 이동구역 가지는 싱글톤 객체
 	private BluePath bluePathInstance;
 	private RedPath redPathInstance;
-	// 제한 구역 가지는 객체
+
+	// 제한 구역 가지는 싱글톤 객체
 	private RestrictArea restrictAreaInstance;
-//	// 포탑 위치 저장하는 리스트
-//	List<Turret> myTurrets = new ArrayList<>();
-//	List<Turret> enemyTurrets = new ArrayList<>();
-//	// 몬스터 위치 저장하는 리스트
-//	List<Point> monsters = new ArrayList<>();
-	
-	// 포탑 위치 저장하는 리스트
-	CopyOnWriteArrayList<Turret> myTurrets = new  CopyOnWriteArrayList<>();
-	CopyOnWriteArrayList<Turret> enemyTurrets = new  CopyOnWriteArrayList<>();
+
+	// 터렛 위치 저장하는 리스트
+	CopyOnWriteArrayList<Turret> myTurrets = new CopyOnWriteArrayList<>();
+	CopyOnWriteArrayList<Turret> enemyTurrets = new CopyOnWriteArrayList<>();
+
 	// 몬스터 위치 저장하는 리스트
-	CopyOnWriteArrayList<Point> monsters = new  CopyOnWriteArrayList<>();
+	CopyOnWriteArrayList<Point> monsters = new CopyOnWriteArrayList<>();
 
-//	List<Point> turrets = new ArrayList<>();
-	// 포탑 레벨 2 위치 저장하는 리스트
-//	List<Point> turrets2 = new ArrayList<>();
-	// 클라이언트단 골드
-	private int gold;
-	private int life;
-	private static final int MAX_LEVEL = 3;
-	// ...
-
-	public GamePanel(RandomDefence context, String nickname, Socket socket, ObjectOutputStream objOs, ObjectInputStream objIs, long roomNum, TEAM team) {
+	// 생성자
+	public GamePanel(RandomDefence context, String nickname, Socket socket, ObjectOutputStream objOs,
+			ObjectInputStream objIs, long roomNum, TEAM team) {
 		this.context = context;
-		this.socket = socket;
+		this.socket = socket; // 소켓
 		this.objOs = objOs;
 		this.objIs = objIs;
-		this.roomNum = roomNum;
-		this.team = team;
-		this.gold = 100;
-		this.life = 10;
-		
-		
-		
-		if(objOs==null)
-			System.out.println("objOs가 null");
-		else{
-			System.out.println("objOs 초기화 완료");
-		}
-		if(objIs==null)
-			System.out.println("objIs가 null");
-		else
-			System.out.println("objIs 초기화 완료");
-		// 추가중 ..
+		this.roomNum = roomNum; // 방번호
+		this.team = team; // 팀
+		this.gold = 100; // 초기 gold 100
+		this.life = 5; // 초기 life 5
+
+		// 각 팀별 포탑 설치 가능 구역, 각 팀별 몬스터 이동 구역, 제한 구역(설치불가) 정보를 가진 싱글톤 객체
 		blueAreaInstance = BlueArea.getInstance();
 		redAreaInstance = RedArea.getInstance();
-
 		bluePathInstance = BluePath.getInstance();
 		redPathInstance = RedPath.getInstance();
-
 		restrictAreaInstance = RestrictArea.getInstance();
 
-		// ..
-
 		System.out.println("GamePanel 입장");
-		context.setSize(1220, 1050);
-//        setPreferredSize(new Dimension(1000, 1000));
-//        context.pack();
-		setLayout(new BorderLayout());
+		context.setSize(1220, 1050); // Frame 사이즈 조절
+		setLayout(new BorderLayout()); // 레이아웃 설정
 
-		// UI 컴포넌트를 추가하기 위한 패널
-	    JPanel statusPanel = new JPanel();
-	    statusPanel.setLayout(new BoxLayout(statusPanel, BoxLayout.Y_AXIS)); // 상하 정렬을 위한 BoxLayout 설정
-	    statusPanel.setPreferredSize(new Dimension(200, 1000)); // 패널의 크기 설정
+		// 상태 정보(팀,골드,생명)를 보여주기 위한 패널
+		statusPanel = new JPanel();
+		statusPanel.setLayout(new BoxLayout(statusPanel, BoxLayout.Y_AXIS));
+		statusPanel.setPreferredSize(new Dimension(200, 1000));
 
-	    // 팀 정보를 표시할 라벨
-	    teamLabel = new JLabel("Team: " + (this.team == TEAM.RED ? "Red" : "Blue"));
-	    statusPanel.add(teamLabel);
+		// 팀 정보를 표시할 라벨
+		teamLabel = new JLabel("Team: " + (this.team == TEAM.RED ? "Red" : "Blue"));
+		statusPanel.add(teamLabel);
 
-	    // 골드를 표시할 라벨
-	    goldLabel = new JLabel("Gold: " + this.gold);
-	    statusPanel.add(goldLabel);
+		// 골드를 표시할 라벨
+		goldLabel = new JLabel("Gold: " + this.gold);
+		statusPanel.add(goldLabel);
 
-	    
-	    lifeLabel = new JLabel("Life: "+ this.life);
-	    statusPanel.add(lifeLabel);
-	    // 상태 패널을 GamePanel에 추가
-	    this.add(statusPanel, BorderLayout.EAST);
+		// 생명을 표시할 라벨
+		lifeLabel = new JLabel("Life: " + this.life);
+		statusPanel.add(lifeLabel);
 
-	    // 게임 상태(골드, 팀 정보 등)를 업데이트하는 메소드
-	    updateGameStatus();
-		
+		// 상태 정보 패널을 GamePanel에 추가
+		this.add(statusPanel, BorderLayout.EAST);
+
+		// 게임 상태(골드, 팀 정보 등)를 업데이트하는 메소드
+		updateGameStatus();
+
+		// 50x50 이미지들을 1000x1000 화면에 그릴 것이므로 이를 List<Point>에 넣음.
 		for (int i = 0; i < 1000; i += 50) {
 			for (int j = 0; j < 1000; j += 50) {
 				Point p = new Point(j, i);
 				allPoints.add(p);
 			}
 		}
+		// 몬스터 이동 통로(레드)
 		redPath = new ArrayList<Point>() {
 			{
 				// 윗 부분
@@ -237,6 +231,7 @@ public class GamePanel extends JPanel {
 
 			}
 		};
+		// 몬스터 이동 통로(블루)
 		bluePath = new ArrayList<Point>() {
 			{
 				// 윗 부분
@@ -310,6 +305,7 @@ public class GamePanel extends JPanel {
 		System.out.println("좌표 리스트 크기: " + allPoints.size());
 		System.out.println("좌표 리스트 마지막: " + allPoints.get(399));
 
+		// 사용할 이미지 가져오기
 		try {
 			grassImage = ImageIO.read(getClass().getResource("/Image/grass.png"));
 			pathImage1 = ImageIO.read(getClass().getResource("/Image/ground1.png"));
@@ -325,7 +321,7 @@ public class GamePanel extends JPanel {
 			e.printStackTrace();
 		}
 
-		// GamePanel에 MouserListener 추가
+		// GamePanel에 MouseListener 추가
 		addMouseListener(new MouseAdapter() {
 			// 마우스 클릭시 호출
 			@Override
@@ -333,11 +329,11 @@ public class GamePanel extends JPanel {
 				Point clickPoint = e.getPoint();
 				System.out.println("클릭: " + clickPoint);
 
-				// 클릭 point의 타일 좌상단 구석 계산
+				// 클릭한 Point의 좌상단 구석을 turretPoint로 설정
 				int tileSize = 50;
 				int tileX = (clickPoint.x / tileSize) * tileSize;
 				int tileY = (clickPoint.y / tileSize) * tileSize;
-				Point turretPoint = new Point(tileX, tileY);
+				Point turretPoint = new Point(tileX, tileY); // turretPoint 지정
 
 				// 해야하는 것: 클라이언트단에서 포탑 설치 및 업그레이드를 한 후 해당 정보를 서버로 전송한다.
 				// 초기 설정: 내가 배정된 팀의 잔디 구역(포탑 구역)에 0레벨 포탑 설치한다(Turret) - 이 경우에는 잔디를 그려준다.
@@ -346,86 +342,78 @@ public class GamePanel extends JPanel {
 				// 그럼 필요한 것:
 				// 클릭한 구역이 내 구역인지 확인 && 몬스터 통로 구역이 아님을 확인 && 설치 불가 구역이 아님을 확인
 
-				// 포탑 설치 가능 구역인지 확인(내 구역인지, 몬스터 통로 아닌지, 제한 구역 아닌지)
+				// 터렛 설치 가능 구역인지 확인(내 구역인지, 몬스터 통로 아닌지, 제한 구역 아닌지)
 				if (isValidTurretPlacement(turretPoint, team)) {
-					// 클릭된 위치의 터렛을 가져옴(몇 레벨이든 포탈 설치 가능 구역 위치엔 터렛이 존재함)
+					// 클릭된 위치의 터렛을 가져온다. (몇 레벨이든 터렛 설치 가능 구역 위치엔 터렛이 존재하는 것으로 설정되어 있음(0레벨일 때는 안보임))
 					Turret existingTurret = getTurretAtPoint(turretPoint);
-					// 업그레이드가 가능한지 확인 - 가능하면 여기서 골드 차감 진행됨.
+					// 업그레이드가 가능한지 확인 -> 가능하면 여기서 골드 차감 진행
 					if (isCanUpgrade(existingTurret)) {
 						// 내 해당 포탑 업그레이드 실행
 						existingTurret.upgrade();
-						// 내 포탑 정보 서버로 전송
+						// 업그레이드가 반영된 내 포탑 정보(ArrayList<Turret>) 서버로 전송
 						sendMessageToServer(MODE.TURRET_UPDATE_MOD, new ArrayList<Turret>(myTurrets));
 						System.out.println(team + "업데이트 요청함");
 					}
-//					for(Turret t: myTurrets) {
-//						System.out.println("터렛 업글 정보: "+ t.getLevel());
-//					}
-//					System.out.println("====================");
 				}
-//				// 포탑 설치 가능 구역 클릭 시
-//				if (!isTurretPresent(turretPoint) && isValidTurretPlacement(turretPoint, team)) {
-//					// 서버에 포탑 배치 요청
-//					sendTurretPlacementRequest(turretPoint);
-//				}
-//				// 이미 설치된 포탑 클릭 시 && 업그레이드 가능한지
-//				else if (isTurretPresent(turretPoint) && isValidUpgradeTurret(turretPoint)) {
-//					// 포탑 업그레이드 하고
-//					// 서버에 알림
-//
-//				}
 			}
-
 		});
 
+		// 서버에 게임 시작한다고 알림
 		synchronized (objOs) {
-
 			try {
 				objOs.reset();
 				objOs.writeObject(new MOD(MODE.GAME_START_MOD, roomNum));
 				objOs.flush();
-				
+
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}
 		}
-		initTurrets();
-		clientReceiverThread = new ClientReceiver();
-		clientReceiverThread.start();
+		initTurrets(); // 내 포탑 설치 가능 구역에 모두 0레벨 터렛 설치
+		clientReceiverThread = new ClientReceiver(); // 서버로부터 객체를 받는 스레드
+		clientReceiverThread.start(); // 스레드 시작
 		setVisible(true);
-
-		
-		// 스레드 시작
-
 	}
-	public void displayEndGameMessage(String message) {
-			this.endGameMessage = message;
-			repaint();
-	}
-	// teamLabel, goldLabel, lifeLabel을 다시 그려주는 부분
-	public void updateGameStatus() {
-		// 팀 라벨의 텍스트 업데이트
-		teamLabel.setText("Team: " + (this.team == TEAM.RED ? "Red" : "Blue"));
 
-		// 골드 라벨의 텍스트 업데이트
-	    goldLabel.setText("Gold: " + this.gold);
-
-	    // 라이프 라벨 텍스트 업데이트
-	    lifeLabel.setText("Life: "+ this.life);
-	    
-	    // Label을 다시 그리도록 요청
-	    teamLabel.repaint();
-	    goldLabel.repaint();
-	    lifeLabel.repaint();
+	// 포탑 배치가 유효한지 확인
+	private boolean isValidTurretPlacement(Point turretPoint, TEAM team) {
+		return isWithinTeamArea(turretPoint, team) && !isMonsterPathArea(turretPoint) && !isRestrictedArea(turretPoint);
 	}
-	
+	// 팀 구역(잔디) 내에 있는지 확인
+	private boolean isWithinTeamArea(Point turretPoint, TEAM team) {
+		// 1. 내 팀에 따라 팀구역 List<Point> 가져오기
+		// 2. 클릭한 좌표가 팀구역에 포함되어 있는지 확인
+		List<Point> teamArea = (team == TEAM.RED) ? redAreaInstance.getRedArea() : blueAreaInstance.getBlueArea();
+		return teamArea.contains(turretPoint);
+	}
+	// 몬스터 통로인지 확인
+	private boolean isMonsterPathArea(Point turretPoint) {
+		// 1. 모든 몬스터 통로를 가져온다.
+		// 2. 클릭한 좌표가 몬스터 통로에 포함하는지 확인한다.
+		List<Point> paths = new ArrayList<>();
+		paths.addAll(bluePathInstance.getDirection1());
+		paths.addAll(bluePathInstance.getDirection2());
+		paths.addAll(bluePathInstance.getDirection3());
+		paths.addAll(bluePathInstance.getDirection4());
+		paths.addAll(redPathInstance.getDirection1());
+		paths.addAll(redPathInstance.getDirection2());
+		paths.addAll(redPathInstance.getDirection3());
+		paths.addAll(redPathInstance.getDirection4());
+		return paths.contains(turretPoint);
+	}
+	// 제한 구역인지 확인
+	private boolean isRestrictedArea(Point turretPoint) {
+		// 1. 금지구역(빈공간, 깃발, 스포너) 가져온다.
+		// 2. 클릭한 좌표가 제한구역에 포함되는지 확인한다.
+		List<Point> restrictArea = restrictAreaInstance.getRestrictArea();
+		return restrictArea.contains(turretPoint);
+	}
 	// 서버에 객체 전송하는 메서드
 	private void sendMessageToServer(MODE mode, Object payload) {
-		// TODO Auto-generated method stub
 		synchronized (objOs) {
 			try {
 				if (objOs != null) {
-					objOs.reset();
+					objOs.reset(); // 보내는 건 MOD 객체에 mode와 payload를 실어 보낸다.
 					objOs.writeObject(new MOD(mode, payload));
 					objOs.flush();
 				}
@@ -433,18 +421,15 @@ public class GamePanel extends JPanel {
 				ex.printStackTrace();
 			}
 		}
-
 	}
-
-	// 현재 클릭된 위치의 터렛이 업그레이드 가능한지 확인
-	// 가능한 상태이면 골드 차감
+	// 현재 클릭된 위치의 터렛이 업그레이드 가능한지 확인, 가능한 상태라면 골드 차감
 	private boolean isCanUpgrade(Turret existingTurret) {
 		int level = existingTurret.getLevel();
-
-		if (level >= 3) { // 3레벨이면 최대레벨이므로 false
+		
+		if (level >= MAX_LEVEL) { // 3레벨이면 최대레벨이므로 false
 			return false;
 		}
-
+		
 		if (level == 0) { // 0렙이면 100골드 차감
 			if (gold >= 100) {
 				gold -= 100;
@@ -466,8 +451,7 @@ public class GamePanel extends JPanel {
 		}
 		return false;
 	}
-
-	// 클릭된 위치의 터렛을 가져온다.
+	// 클릭된 Point의 터렛을 가져온다.
 	private Turret getTurretAtPoint(Point point) {
 		for (Turret turret : myTurrets) {
 			if (turret.getPoint().equals(point)) {
@@ -476,44 +460,7 @@ public class GamePanel extends JPanel {
 		}
 		return null;
 	}
-
-	// 포탑 배치가 유효한지 확인
-	private boolean isValidTurretPlacement(Point turretPoint, TEAM team) {
-		return isWithinTeamArea(turretPoint, team) && !isMonsterPathArea(turretPoint) && !isRestrictedArea(turretPoint);
-	}
-
-	// 팀 구역(잔디) 내에 있는지 확인(잔디)
-	private boolean isWithinTeamArea(Point turretPoint, TEAM team) {
-		// 1. 내 팀에 따라 팀구역 List<Point> 가져오기
-		// 2. 클릭한 좌표가 팀구역에 포함되어 있는지 확인
-		List<Point> teamArea = (team == TEAM.RED) ? redAreaInstance.getRedArea() : blueAreaInstance.getBlueArea();
-		return teamArea.contains(turretPoint);
-	}
-
-	// 몬스터 통로인지 확인
-	private boolean isMonsterPathArea(Point turretPoint) {
-		// 1. 모든 몬스터 통로를 가져온다.
-		// 2. 클릭한 좌표가 몬스터 통로에 포함하는지 확인한다.
-		List<Point> paths = new ArrayList<>();
-		paths.addAll(bluePathInstance.getDirection1());
-		paths.addAll(bluePathInstance.getDirection2());
-		paths.addAll(bluePathInstance.getDirection3());
-		paths.addAll(bluePathInstance.getDirection4());
-		paths.addAll(redPathInstance.getDirection1());
-		paths.addAll(redPathInstance.getDirection2());
-		paths.addAll(redPathInstance.getDirection3());
-		paths.addAll(redPathInstance.getDirection4());
-		return paths.contains(turretPoint);
-	}
-
-	private boolean isRestrictedArea(Point turretPoint) {
-		// 1. 금지구역(빈공간, 깃발, 스포너) 가져온다.
-		// 2. 클릭한 좌표가 제한구역에 포함되는지 확인한다.
-		List<Point> restrictArea = restrictAreaInstance.getRestrictArea();
-		return restrictArea.contains(turretPoint);
-	}
-
-	// 게임 시작시 내 팀 모든 구역에 포탑 설정(0레벨)
+	// 게임 시작시 내 팀 모든 터렛 설치 가능 구역에 0레벨 포탑 설정
 	private void initTurrets() {
 		// 내 팀구역 가져오기
 		List<Point> teamArea = (team == TEAM.RED) ? redAreaInstance.getRedArea() : blueAreaInstance.getBlueArea();
@@ -525,80 +472,60 @@ public class GamePanel extends JPanel {
 		// 서버에 터렛 업데이트 했다고 알리기
 		sendMessageToServer(MODE.TURRET_UPDATE_MOD, new ArrayList<Turret>(myTurrets));
 	}
+	// teamLabel, goldLabel, lifeLabel을 다시 그려주는 메서드
+	public void updateGameStatus() {
+		// 팀 라벨의 텍스트 업데이트
+		teamLabel.setText("Team: " + (this.team == TEAM.RED ? "Red" : "Blue"));
 
-//	// 서버로부터 포탑의 위치 정보를 받음
-//	private void receiveTurretDataFromServer() {
-//		// 서버로부터 포탑 데이터를 수신하는 로직
-//		// 예를 들어, 서버로부터 받은 포탑 위치 데이터를 turrets 리스트에 추가하거나 업데이트
-//	}
+		// 골드 라벨의 텍스트 업데이트
+		goldLabel.setText("Gold: " + this.gold);
 
-//	// 서버 응답 처리
-//	private void handleServerResponse(Object response) {
-//		// 1. 서버로부터 응답을 받는다
-//		// 2. 응답받은 것에서 turret의 Position을 꺼낸다
-//		// 3. turrets에 받아온 turret의 Position을 추가 및 업데이트
-//		// 4. repaint() 호출하여 다시 그린다.
-//
-//		repaint();
-//	}
+		// 라이프 라벨 텍스트 업데이트
+		lifeLabel.setText("Life: " + this.life);
 
+		// Label을 다시 그리도록 요청
+		teamLabel.repaint();
+		goldLabel.repaint();
+		lifeLabel.repaint();
+	}
+	// 게임 종료 메시지 그리기 요청
+	public void displayEndGameMessage(String message) {
+		this.endGameMessage = message;
+		repaint();
+	}
 	// 1. 초기에 불려짐
 	// 2. repaint() 호출시 불려짐
 	@Override
 	protected void paintComponent(Graphics g) {
 		super.paintComponent(g);
-		// 타일맵 : 잔디
-//		drawGrassBackground(g); // 잔디 구역
-//		drawRedTeam(g); // 레드팀 깃발
-//		drawBlueTeam(g); // 블루팀 깃발
-//		drawSpawner(g); // 스포너
-//		drawPath_red(g); // 레드팀 몬스터 통로
-//		drawPath_blue(g); // 블루팀 몬스터 통로
-//		drawTurrets(g, myTurrets); // 내 터렛
-//		drawTurrets(g, enemyTurrets); // 상대 터렛
-//		drawMonsters(g); // 몬스터
-		
+
 		// 버퍼 이미지 초기화
-		if(bufferImage == null) {
+		if (bufferImage == null) {
 			bufferImage = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_ARGB);
 			bufferGraphics = bufferImage.getGraphics();
 		}
+		
 		// 게임 그리기
 		drawGame(bufferGraphics);
-		// 게임 종료 문구 설정
-	    if (endGameMessage != null) {
-	        bufferGraphics.setColor(new Color(0, 0, 0, 128));
-	        bufferGraphics.fillRect(0, 0, getWidth(), getHeight());
-	        bufferGraphics.setColor(Color.WHITE);
-	        bufferGraphics.setFont(new Font("Arial", Font.BOLD, 64));
-	        FontMetrics fm = bufferGraphics.getFontMetrics();
-	        int x = (getWidth() - fm.stringWidth(endGameMessage)) / 2;
-	        int y = ((getHeight() - fm.getHeight()) / 2) + fm.getAscent();
-	        bufferGraphics.drawString(endGameMessage, x, y);
-	    }
+		
+		// 게임 종료 후 게임 종료 메시지가 설정되면 보여짐
+		if (endGameMessage != null) {
+			bufferGraphics.setColor(new Color(0, 0, 0, 128));
+			bufferGraphics.fillRect(0, 0, getWidth(), getHeight());
+			bufferGraphics.setColor(Color.WHITE);
+			bufferGraphics.setFont(new Font("MALGUNSL", Font.BOLD, 64));
+			FontMetrics fm = bufferGraphics.getFontMetrics();
+			int statusPanelWidth = statusPanel.getPreferredSize().width;
+			int gamePanelWidth = getWidth() - statusPanelWidth;
+			int x = (gamePanelWidth - fm.stringWidth(endGameMessage)) / 2;
+			int y = (getHeight() - fm.getHeight()) / 2 + fm.getAscent();
+			bufferGraphics.drawString(endGameMessage, x, y);
+		}
 
-	    // 버퍼 이미지를 화면에 그리기
-	    g.drawImage(bufferImage, 0, 0, this);
-		
-		
-		// List<Turret> myTurrets의 모든 Point에 포탑 이미지 그리기
-	
-		// List<Turret> enemyTurrets의 모든 Point에 포탑 이미지 그리기
-//		synchronized (enemyTurrets) {
-//			
-//			for (Turret turret : enemyTurrets) {
-//				if (turret.getLevel() == 0) { // 포탑 레벨이 0 -> 잔디 그리기
-//					g.drawImage(grassImage, turret.getPoint().x, turret.getPoint().y, this);
-//				} else {
-//					Image turretImage = getTurretImagByLevel(turret.getLevel());
-//					g.drawImage(turretImage, turret.getPoint().x, turret.getPoint().y, this);
-//				}
-//			}
-//		}
-
-		// List<Point> monsters의 모든 Point에 몬스터 이미지 그리기
-		
+		// 버퍼 이미지를 화면에 그리기
+		g.drawImage(bufferImage, 0, 0, this);
 	}
+	// 게임에 필요한 모든 요소 그리기
 	private void drawGame(Graphics g) {
 		drawGrassBackground(g); // 잔디 구역
 		drawRedTeam(g); // 레드팀 깃발
@@ -606,59 +533,45 @@ public class GamePanel extends JPanel {
 		drawSpawner(g); // 스포너
 		drawPath_red(g); // 레드팀 몬스터 통로
 		drawPath_blue(g); // 블루팀 몬스터 통로
-		// 포탑과 몬스터
-		drawTurrets(g, myTurrets);
-		drawTurrets(g, enemyTurrets);
-		drawMonsters(g);
-//		if (endGameMessage != null) {
-//            g.setColor(new Color(0, 0, 0, 128));
-//            g.fillRect(0, 0, getWidth(), getHeight());
-//
-//            g.setColor(Color.WHITE);
-//            g.setFont(new Font("Arial", Font.BOLD, 64));
-//            FontMetrics fm = g.getFontMetrics();
-//            int x = (getWidth() - fm.stringWidth(endGameMessage)) / 2;
-//            int y = (getHeight() - fm.getHeight()) / 2 + fm.getAscent();
-//            g.drawString(endGameMessage, x, y);
-//        }
+		drawTurrets(g, myTurrets); // 내 터렛
+		drawTurrets(g, enemyTurrets); // 상대 터렛
+		drawMonsters(g); // 몬스터
 	}
+	// CopyOnWriteArrayList<Turret> 을 받아서 터렛 그리기
 	private void drawTurrets(Graphics g, CopyOnWriteArrayList<Turret> turrets) {
 		synchronized (turrets) {
 			for (Turret turret : turrets) {
 				if (turret.getLevel() == 0) { // 포탑 레벨이 0 -> 잔디 그리기
 					g.drawImage(grassImage, turret.getPoint().x, turret.getPoint().y, this);
-				} else {
+				} else { // 그 외 -> 포탑 레벨에 맞는 이미지 그리기
 					Image turretImage = getTurretImagByLevel(turret.getLevel());
 					g.drawImage(turretImage, turret.getPoint().x, turret.getPoint().y, this);
 				}
 			}
 		}
 	}
-
+	// 포탑 레벨에 따른 다른 터렛 이미지 반환
+	private Image getTurretImagByLevel(int level) {
+		switch (level) {
+		case 1:
+			return turret1Image; // 1레벨 -> 1레벨 포탑 이미지
+		case 2:
+			return turret2Image; // 2레벨 -> 2레벨 포탑 이미지
+		case 3:
+			return turret3Image; // 3레벨 -> 3레벨 포탑 이미지
+		default:
+			return grassImage;
+		}
+	}
+	// CopyOnWriteArrayList<Point> monsters의 모든 Point에 몬스터 이미지 그리기
 	private void drawMonsters(Graphics g) {
 		synchronized (monsters) {
-//			System.out.println("Monsters.size() : " + monsters.size());
-	
 			for (Point monster : monsters) {
 				g.drawImage(monsterImage, monster.x, monster.y, this);
 			}
 		}
 	}
-
-	// 포탑 레벨에 따른 다른 터렛 이미지 반환
-	private Image getTurretImagByLevel(int level) {
-		switch (level) {
-		case 1:
-			return turret1Image;
-		case 2:
-			return turret2Image;
-		case 3:
-			return turret3Image;
-		default:
-			return grassImage;
-		}
-	}
-
+	// 레드팀 몬스터 이동구역 그리기
 	private void drawPath_red(Graphics g) {
 		if (pathImage1 != null) {
 			int pathWidth = pathImage1.getWidth(this);
@@ -668,7 +581,7 @@ public class GamePanel extends JPanel {
 			}
 		}
 	}
-
+	// 블루팀 몬스터 이동구역 그리기
 	private void drawPath_blue(Graphics g) {
 		if (pathImage2 != null) {
 			int pathWidth = pathImage2.getWidth(this);
@@ -679,7 +592,7 @@ public class GamePanel extends JPanel {
 		}
 
 	}
-
+	// 스포너 그리기
 	private void drawSpawner(Graphics g) {
 		if (spawnerImage != null) {
 			int spawnerWidth = spawnerImage.getWidth(this);
@@ -687,35 +600,30 @@ public class GamePanel extends JPanel {
 			g.drawImage(spawnerImage, 450, 450, spawnerWidth, spawnerHeight, this);
 		}
 	}
-
+	// 레드팀 깃발 그리기
 	private void drawRedTeam(Graphics g) {
 		if (redTeamImage != null) {
 			int redWidth = redTeamImage.getWidth(this);
 			int redHeight = redTeamImage.getHeight(this);
 			g.drawImage(redTeamImage, 0, 0, redWidth, redHeight, this);
-//			g.drawImage(redTeamImage, 0, 450, redWidth, redHeight, this);
 			g.drawImage(redTeamImage, 0, 900, redWidth, redHeight, this);
 		}
 	}
-
+	// 블루팀 깃발 그리기
 	private void drawBlueTeam(Graphics g) {
 		if (blueTeamImage != null) {
 			int blueWidth = blueTeamImage.getWidth(this);
 			int blueHeight = blueTeamImage.getHeight(this);
 			g.drawImage(blueTeamImage, 900, 0, blueWidth, blueHeight, this);
-//			g.drawImage(blueTeamImage, 900, 450, blueWidth, blueHeight, this);
 			g.drawImage(blueTeamImage, 900, 900, blueWidth, blueHeight, this);
 		}
 
 	}
-
+	// 잔디 그리기
 	private void drawGrassBackground(Graphics g) {
 		if (grassImage != null) {
 			int tileWidth = grassImage.getWidth(this);
 			int tileHeight = grassImage.getHeight(this);
-//			System.out.println("tileWidth, tileHeight = " + tileWidth + ", " + tileHeight);
-//			System.out.println("전체 너비 " + getWidth());
-//			System.out.println("전체 높이 " + getHeight());
 			for (int y = 0; y < getHeight(); y += tileHeight) {
 				for (int x = 0; x < getWidth(); x += tileWidth) {
 					g.drawImage(grassImage, x, y, tileWidth, tileHeight, this);
@@ -723,193 +631,106 @@ public class GamePanel extends JPanel {
 			}
 		}
 	}
-
+	// 클라이언트가 서버로부터 객체를 수신하는 스레드
 	class ClientReceiver extends Thread {
 		private List<Turret> turrets;
 		MOD packet;
 		int dropGold;
 		String teamColor;
-//		public ClientReceiver(ObjectInputStream objIs) {
-//			this.objIs = objIs;
-//		}
+
 		public ClientReceiver() {
 			turrets = new ArrayList<>();
 		}
 
 		@Override
 		public void run() {
-				try {
-					while (true) {
-						// 서버에서 Object 읽기
-
-						synchronized (objIs) {
-							packet = (MOD) objIs.readObject();
-
-							MODE mode = packet.getMode();
-
-							switch (mode) {
-							// 상대 터렛 그리기
-							case PNT_TURRET_MOD:
-								// 1. 상대편 List<Turret>을 꺼내 turrets에 저장
-								turrets.clear();
-								turrets = (List<Turret>) packet.getPayload();
-								// 2. 받아온 상대편 List<Turret> turrets를 enemyTurrets에 삽입.
-								enemyTurrets.clear();
-								enemyTurrets.addAll(turrets);
-								// 3. 다시 그리기
-								repaint();
-								break;
-							// 몬스터 그리기
-							case PNT_MONSTER_MOD:
-								// 1. Vector<MonsterPosPair>을 꺼낸다
-								Vector<MonsterPosPair> monstersInfo = (Vector<MonsterPosPair>) packet.getPayload();
-								
-								// 서버로부터 받은 값은 계속 똑같은 문제가 있습니다.
-//								for(int i=1;i<monstersInfo.size();i++) {
-//									System.out.println("point: ["+monstersInfo.get(i).monster.getPoint().x+", "+ monstersInfo.get(i).monster.getPoint().y+"]");
-//								}
-								
-								// 2. 골드 꺼낸다(몬스터 잡아 얻은)
-								dropGold = monstersInfo.get(0).idx;
-								System.out.println("dropGold: "+ dropGold);
-								gold+= dropGold;
-								System.out.println("gold: "+ gold);
-//								gold += monstersInfo.get(0).idx;
-								// 몬스터의 위치 정보 업데이트
-								updateMonsters(monstersInfo);
-								updateGameStatus(); // 골드, 팀 상태 업데이트
-								repaint();
-								break;
-							case MODIFY_LIFE_MOD:
-								int remainLife = (int) packet.getPayload();
-								System.out.println("남은 라이프: "+ remainLife);
-								life = remainLife;
-								updateGameStatus();
-								repaint();
-								break;
-							case GAME_WIN_MOD:
-								teamColor = (team ==TEAM.RED)? "레드팀":"블루팀";
-								System.out.println(teamColor+": "+"게임에서 승리하였습니다!");
-	                            displayEndGameMessage(teamColor+": "+"게임에서 승리하였습니다!");
-								break;
-							case GAME_LOSE_MOD:
-								teamColor = (team ==TEAM.RED)? "레드팀":"블루팀";
-								System.out.println(teamColor+": "+"게임에서 패배하였습니다!");
-	                            displayEndGameMessage(teamColor+": "+"게임에서 패배하였습니다..");
-								break;
-							case TEST_MOD:
-								System.out.println(packet.getPayload());
-								break;
-							}
-
-//							objIs.reset();
+			try {
+				while (true) {
+					synchronized (objIs) {
+						// 서버에서 객체 읽기
+						packet = (MOD) objIs.readObject();
+						
+						// MOD 객체에서 MODE 꺼내기
+						MODE mode = packet.getMode();
+						
+						switch (mode) { // MODE에 따른 분기
+						case PNT_TURRET_MOD: // 상대 터렛 그리기
+							// 1. 서버로부터 상대편 List<Turret>을 받아 turrets에 저장
+							turrets.clear();
+							turrets = (List<Turret>) packet.getPayload();
+							
+							// 2. 받아온 상대편 List<Turret> turrets를 enemyTurrets에 삽입.
+							enemyTurrets.clear();
+							enemyTurrets.addAll(turrets);
+							
+							// 3. 다시 그리기
+							repaint();
+							break;
+						case PNT_MONSTER_MOD: // 몬스터 그리기
+							// 1. 서버로부터 Vector<MonsterPosPair>을 받는다.
+							Vector<MonsterPosPair> monstersInfo = (Vector<MonsterPosPair>) packet.getPayload();
+							
+							// 2. 몬스터를 잡아 얻은 골드를 꺼낸다  *0번째 요소 idx에 골드 정보가 있음
+							dropGold = monstersInfo.get(0).idx;
+							System.out.println("dropGold: " + dropGold);
+							gold += dropGold;
+							System.out.println("gold: " + gold);
+							
+							// 3. 몬스터의 위치 정보 업데이트
+							updateMonsters(monstersInfo);
+							// 4. 팀, 골드, 생명 상태 업데이트
+							updateGameStatus(); 
+							// 5. 다시 그리기
+							repaint();
+							break;
+						case MODIFY_LIFE_MOD: // 생명력이 깎임.
+							// 1. 서버로부터 남은 생명력 받기
+							int remainLife = (int) packet.getPayload();
+							System.out.println("남은 라이프: " + remainLife);
+							// 2. life 재설정
+							life = remainLife;
+							// 3. 팀, 골드, 생명 상태 업데이트
+							updateGameStatus();
+							// 4. 다시 그리기
+							repaint();
+							break;
+						case GAME_WIN_MOD: // 이겼을 때
+							teamColor = (team == TEAM.RED) ? "레드팀" : "블루팀";
+							System.out.println(teamColor + ": " + "게임에서 승리하였습니다!");
+							displayEndGameMessage(teamColor + ": " + "게임에서 승리하였습니다!");
+							break;
+						case GAME_LOSE_MOD: // 졌을 때
+							teamColor = (team == TEAM.RED) ? "레드팀" : "블루팀";
+							System.out.println(teamColor + ": " + "게임에서 패배하였습니다!");
+							displayEndGameMessage(teamColor + ": " + "게임에서 패배하였습니다..");
+							break;
+						case TEST_MOD:
+							System.out.println(packet.getPayload());
+							break;
 						}
 					}
-
-				} catch (Exception e) {
-					e.printStackTrace();
-					System.out.println("");
 				}
-			
 
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
-
+		// monstersInfo에서 몬스터 위치 정보를 추출하여 그리기 위한 몬스터 목록을 업데이트
 		private void updateMonsters(Vector<MonsterPosPair> monstersInfo) {
-			// monstersInfo에서 몬스터 위치 정보를 추출하여 그리기 위한 몬스터 목록을 업데이트합니다.
 			CopyOnWriteArrayList<Point> monsterPoints = new CopyOnWriteArrayList<>();
 			synchronized (monsterPoints) {
-				
 				for (MonsterPosPair monsterPair : monstersInfo) {
 					if (monsterPair.monster != null) {
 						monsterPoints.add(monsterPair.monster.getPoint());
-	//					System.out.println(monsterPair.monster.getPoint());
 					}
 				}
 				// 이제 monsterPoints에는 모든 몬스터의 위치 정보 존재
 				// 이 정보를 화면에 그리기 위한 monsters를 초기화 후 저장.
-				synchronized (monsters) { // Synchronize on monsters to avoid concurrent modification
+				synchronized (monsters) {
 					monsters.clear();
 					monsters.addAll(monsterPoints);
-//					for(Point p : monsterPoints) {
-//						System.out.println("p: ["+p.x+","+p.y+"]");
-//					}
-//					System.out.println("===========================");
 				}
 			}
-
-//			synchronized (monsters) {
-//				// 이제 monsterPoints에는 모든 몬스터의 위치 정보 존재
-//				// 이 정보를 화면에 그리기 위한 monsters를 초기화 후 저장.
-//				monsters.clear();
-////			for (int i = 1 ;
-////				 i < (10 <= monsterPoints.size() ? 10 : monsterPoints.size()) ;
-////				 i++) {
-////				System.out.print(monsterPoints.get(i) + " ");
-////				if (i % 5 == 0) System.out.println();
-////			}
-////			System.out.println("\n---------------");
-//				monsters.addAll(monsterPoints);
-//			}
-
 		}
-//		// 터렛 위치 업데이트하는 메서드
-//		private void updateTurretLocation(Point newTurretLocation) {
-//			// 중복된 터렛 위치가 없는 경우 추가
-//			if (!myTurrets.contains(newTurretLocation)) {
-//				myTurrets.add(newTurretLocation);
-//			}
-//		}
-//
-//		// 몬스터 위치 업데이트하는 메서드
-//		private void updateMonsterLocation(Point newMonsterLocation) {
-//			// 중복된 몬스터 위치가 없는 경우 추가
-//			if (!monsters.contains(newMonsterLocation)) {
-//				monsters.add(newMonsterLocation);
-//			}
-//		}
 	}
 }
-//포탑 배치 가능 영역인지 확인
-//	protected boolean isTurretPlacementArea(Point turretPoint) {
-//		if(team == TEAM.RED) {
-//			return isWithinRedArea(turretPoint);
-//		} else if(team == TEAM.BLUE) {
-//			return isWithinRedArea(turretPoint);
-//		}
-//		return false;
-//	}
-//	private boolean isWithinRedArea(Point turretPoint) {
-//		// TODO Auto-generated method stub
-//		return false;
-//	}
-//
-//	// 서버에서 사용할 코드(미리 적어놓음)
-//	public void handleTurretRequest(Point turretPoint) {
-//
-//	}
-//
-
-//for(int i=22;i<=29;i++) {
-//g.drawImage(pathImage1, allPoints.get(i).x, allPoints.get(i).y, this);
-//}
-//for(int i=362;i<=369;i++) {
-//g.drawImage(pathImage1, allPoints.get(i).x, allPoints.get(i).y, this);
-//}
-//for(int i=181;i<=188;i++) {
-//g.drawImage(pathImage1, allPoints.get(i).x, allPoints.get(i).y, this);
-//}
-//for(int i=201;i<=208;i++) {
-//g.drawImage(pathImage1, allPoints.get(i).x, allPoints.get(i).y, this);
-//}
-//for(int i=41;i<=161;i+=20) {
-//g.drawImage(pathImage1, allPoints.get(i).x, allPoints.get(i).y, this);
-//}
-//for(int i=221;i<=341;i+=20) {
-//g.drawImage(pathImage1, allPoints.get(i).x, allPoints.get(i).y, this);
-//}
-//for(int i=29;i<=169;i+=20) {
-//g.drawImage(pathImage1, allPoints.get(i).x, allPoints.get(i).y, this);
-//}
-//for(int i=229;i<=349;i+=20) {
-//g.drawImage(pathImage1, allPoints.get(i).x, allPoints.get(i).y, this);
-//}
