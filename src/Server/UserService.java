@@ -59,7 +59,7 @@ public class UserService extends Thread implements Serializable{
                         System.out.println("id : " + id + " 방 생성 요청");
                         team = TEAM.RED;
                     }
-                    case GET_ROOM_MOD -> {
+                    case GET_ROOM_MOD -> { // 현재 존재하는 Room들의 List를 전송
                         objOS.writeObject(new MOD(
                                 MODE.SUCCESS_GET_ROOM_MOD,
                                 new Vector<>(this.server.roomMananger.getRooms())));
