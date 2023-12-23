@@ -3,19 +3,24 @@ package util;
 import java.awt.Point;
 import java.util.ArrayList;
 import java.util.List;
-
+/*
+ * RestrictArea: 제한 구역을 관리하는 싱글톤 클래스
+ * 포탑 설치가 불가능한 구역을 정의 (깃발, 스포너, 좌우상단 가운데 두 타일씩)
+ */
 public class RestrictArea {
 	public static RestrictArea restrictArea;
 	List<Point> allPoints = new ArrayList<>();
 	List<Point> area;
 
 	private RestrictArea() {
+		// 전체 모든 영역 Point 생성
 		for (int i = 0; i < 1000; i += 50) {
 			for (int j = 0; j < 1000; j += 50) {
 				Point p = new Point(j, i);
 				allPoints.add(p);
 			}
 		}
+		// 제한 구역 설정
 		area = new ArrayList<>() {
 			{
 				// 상단 레드 깃발
@@ -75,6 +80,7 @@ public class RestrictArea {
 		return restrictArea;
 	}
 
+	// 제한 구역 반환
 	public List<Point> getRestrictArea() {
 		return area;
 	}

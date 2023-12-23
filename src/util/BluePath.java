@@ -3,9 +3,15 @@ package util;
 import java.awt.Point;
 import java.util.ArrayList;
 import java.util.List;
-
+/*
+ * 싱글톤 클래스:
+ * 블루팀 몬스터의 이동 경로를 정의
+ * 몬스터가 맵에서 이동할 수 있는 네가지 경로를 관리
+ * Path를 상속 받음
+ */
 public class BluePath extends Path {
 	private static BluePath bluePath;
+	// 생성자: 블루팀 몬스터 이동 경로 초기화
 	private BluePath() {
 		super();
 		Direction1 = new ArrayList<Point>() {
@@ -66,7 +72,6 @@ public class BluePath extends Path {
 				add(allPoints.get(358));
 			}
 		};
-		
 		Direction4 = new ArrayList<Point>() {
 			{
 				add(allPoints.get(230));

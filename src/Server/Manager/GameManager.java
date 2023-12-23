@@ -14,22 +14,27 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 public class GameManager {
     private Server server;
-    private ConcurrentHashMap<Long, GameSession> games;
+    private ConcurrentHashMap<Long, GameSession> games; // 게임 세션 관리 맵
+    // 몬스터 이동 경로 및 포탑 설치 가능 구역 인스턴스
     private final BluePath bluePath = BluePath.getInstance();
     private final RedPath redPath = RedPath.getInstance();
     private final BlueArea blueArea = BlueArea.getInstance();
     private final RedArea redArea = RedArea.getInstance();
     private final Random randGenerator = new Random();
 
+    // 생성자: 서버 인스턴스 초기화 & games 맵 초기화
     public GameManager(Server server) {
         this.server = server;
         games = new ConcurrentHashMap<>();
     }
 
+    // GameSession 스레드 생성하는 메소드
+    // 해당 메소드는 한번만 호출되도록 설정
+    // 이유: GameSession 스레드가 두개돌면 MonsterUpdateThread 스레드가 두개 생성되어 의도치 않은 결과 초래
     public synchronized void addGame(Room r, long roomNum) {
     	// 해당 roomNum에 대한 GameSession이 존재하는지 확인
     	if(games.containsKey(roomNum)) {
-    		//이미 존재하는 경우에는 아무것도 안함.
+    		// 이미 존재하는 경우에는 아무것도 안하도록 한다.
     		return;
     	}
     	// 존재하지 않는 경우, 새로운 GameSession을 만들어 맵에 추가
@@ -39,19 +44,14 @@ public class GameManager {
         GameSession newSession = new GameSession(new Player(manager), new Player(player));
         // putIfAbsent를 사용하여 이미 존재하는 경우에는 추가하지 않음
         games.putIfAbsent(roomNum, newSession);
-        // 여기가 GameSession을 시작하는 부분 - addGame이 두번 호출되지는 않았는지 체크할 필요 o
-//        games.put(roomNum, new GameSession(
-//                new Player(manager),
-//                new Player(player)
-//        ));
     }
 
+    // 게임 시작 메소드
     public void startGame(long roomNum) {
-//        games.get(roomNum).start();
     	GameSession session = games.get(roomNum);
         if (session != null && !session.isRunning()) {
             try{
-                session.start();
+                session.start(); // GameSession 스레드 시작
             }
             catch(IllegalThreadStateException e1) {
                 System.out.println("게임이 이미 시작됨");
@@ -59,9 +59,10 @@ public class GameManager {
         }
     }
 
+    // 플에이어 관리하는 내부 클래스
     public class Player {
         protected UserService user;
-        protected int gold;
+//        protected int gold;
         protected int life;
         protected final List<MonsterPosPair> monsters = new CopyOnWriteArrayList<>();
         protected List<Turret> turrets = new CopyOnWriteArrayList<>();
@@ -69,7 +70,7 @@ public class GameManager {
 
         public Player(UserService user) {
             this.user = user;
-            this.gold = 500;
+//            this.gold = 500;
             this.life = 5;
         }
 
@@ -124,41 +125,40 @@ public class GameManager {
             return genPoint;
         }
 
+        // 몬스터 처리 수행 메소드
         public Vector<MonsterPosPair> monsterProcess(Object path) {
-            // 기존의 몹들을 한칸씩 이동시킨다
+            // 기존의 몬스터들을 한칸씩 이동시킨다
             synchronized(monsters) {
                 for (MonsterPosPair m : monsters) {
-
                     try {
-//                        System.out.print("move : " + m.monster.getPoint() + " -> ");
                         m.monster.setPoint(getPoint(m.idx, m.monster.getPoint(), path));
-//                        System.out.println(m.monster.getPoint());
                     } catch (IndexOutOfBoundsException e) {
-                        decreaseLife();
-                        monsters.remove(m);
+                        decreaseLife(); // 깃발에 닿으면 생명력 감소
+                        monsters.remove(m); // 깃발에 닿은 몬스터 삭제
                     }
                 }
             }
-//            System.out.print("new  : ");
-            // 새로운 몹을 생성한 후, 몹 리스트에 넣는다
+            // 새로운 몬스터를 생성한 후, MonsterPosPair 리스트에 넣는다
             int newMonsterPathIdx = randGenerator.nextInt(4) + 1;
             Monster newMonster = new Monster(getPoint(newMonsterPathIdx, null, path));
-//            System.out.println(newMonster.getPoint() + "\n---------------");
 
             monsters.add(new MonsterPosPair(
                             newMonsterPathIdx,
                             newMonster));
 
-            // 터렛에 의한 피격처리
+            // 터렛에 의한 피격처리 후 얻은 골드
             int plusGold = turretAttackProcess();
 
             // 깊은복사한 Vector를 최종 전달
-            // 0번째 요소는 처리된 몬스터를 바탕으로 몇골드를 얻게 되는지를 추가한다.
+            // 참고) 0번째 요소에는 처리된 몬스터를 바탕으로 몇골드를 얻게 되는지를 추가한다.
             Vector<MonsterPosPair> result = new Vector<>(monsters);
             result.insertElementAt(new MonsterPosPair(plusGold, null), 0);
-            return result;
+           
+            // 최종 처리된 몬스터 목록 반환
+            return result; 
         }
 
+        // 터렛의 공격을 처리 메소드
         public int turretAttackProcess() {
             int earnedGold = 0;
 
@@ -167,26 +167,28 @@ public class GameManager {
                 if (turret.getLevel() > 0 && turret.getTeam() == user.getTeam()) { // 0 레벨은 공격 불가
                     MonsterPosPair target = findClosestMonster(turret.getPoint());
                     if (target != null) {
+                    	
                         // 몬스터 공격 로직
                         turret.attack(target.monster);
 
                         // 몬스터가 죽었는지 체크
                         if (target.monster.getHP() <= 0) {
                             monsters.remove(target);
-                            earnedGold += 10; // 가정한 금액, 게임 규칙에 따라 조정 필요
+                            earnedGold += 10; // 얻는 금액: 가정한 금액, 게임 규칙에 따라 조정 필요
                         }
                     }
                 }
             }
 
-            return earnedGold;
+            return earnedGold; // 골드 반환
         }
 
+        // 가까운 몬스터를 찾아 반환하는 메소드
         private MonsterPosPair findClosestMonster(Point turretPosition) {
             MonsterPosPair closestMonster = null;
             double closestDistance = Double.MAX_VALUE;
 
-            // 몬스터 리스트를 순회하며 가장 가까운 몬스터를 찾음
+            // MonsterPosPair 리스트를 순회하며 가장 가까운 몬스터를 찾음
             for (MonsterPosPair monsterPair : monsters) {
                 double distance = turretPosition.distance(monsterPair.monster.getPoint());
                 if (distance < closestDistance) {
@@ -198,17 +200,20 @@ public class GameManager {
             // 몬스터가 터렛의 사정거리 내에 있으면 반환
             return closestDistance <= TURRET_RANGE ? closestMonster : null;
         }
-
+        
+        // 플레이어의 터렛 상태를 업데이트하는 메소드
         public synchronized void updateTurret(List<Turret> new_turrets) {
             this.turrets.clear();
             this.turrets.addAll(new_turrets);
         }
     }
 
+    // 방 번호에 해당하는 게임 세션 반환하는 메소드
     public synchronized GameSession getGameRoom(long rid) {
         return games.get(rid);
     }
-
+    
+    // 게임 세션을 관리하는 내부 클래스
     public class GameSession extends Thread {
         private Player red;
         private ObjectOutputStream redObjOs;
@@ -236,21 +241,21 @@ public class GameManager {
         @Override
         public void run() {
         	if(isRunning) {
-        		// 실행중이면 새 스레드 실행 절대 안시킨다.
+        		// 실행중이면 새 스레드 실행 방지
         		return;
         	}
-        	isRunning = true; // 실행 중인게 없다면 스레드가 실행중임을 표시한다.
+        	isRunning = true; // 스레드가 실행중임을 표시한다.
             Thread monsterUpdater = new MonsterUpdateThread();
-            monsterUpdater.start();
+            monsterUpdater.start(); // 몬스터 업데이트 스레드 시작
 
-            // 여기가 메인인데, 여기서 계속 승패판정 돌리다가, 걸리면 ㄱ둘다 인터럽트 걸고 꺼버리죠
+            // 게임이 종료될 때까지 무한루프
             while(!isGameEnd());
             System.out.println("game session - 승패 판정 남");
-            // 게임 종료시 스레드가 종료되었음을 표시
-            isRunning = false;
+            
+            isRunning = false;  // 게임 종료시 스레드가 종료되었음을 표시
             monsterUpdater.interrupt(); // 게임 끝남
 
-            // 클라들한테 메세지 보내기
+            // 클라이언트 들에게 메세지 보내기
             Player winner = red.getLife() != 0 ? red : blue;
             Player losser = red == winner ? blue : red;
 
@@ -260,6 +265,7 @@ public class GameManager {
             synchronized (winOS) {
                 synchronized (lossOS) {
                     try {
+                    	// 각 클라에게 승패 여부를 전송
                         winOS.writeObject(new MOD(MODE.GAME_WIN_MOD, null));
                         lossOS.writeObject(new MOD(MODE.GAME_LOSE_MOD, null));
 
@@ -276,13 +282,14 @@ public class GameManager {
         public boolean isRunning() {
         	return isRunning;
         }
-        public boolean isGameEnd() {
+        public boolean isGameEnd() { // 어느 한 클라이언트의 생명력이 0이면 true
             return red.getLife() <= 0 || blue.getLife() <= 0;
         }
         public synchronized Player getPlayer(int uid) {
             return red.user.getUserID() == uid ? red : blue;
         }
 
+        // 몬스터 업데이트를 담당하는 내부 클래스(스레드)
         private class MonsterUpdateThread extends Thread {
         	Vector<MonsterPosPair> redCurrent, blueCurrent, redTemp, blueTemp;
         	
@@ -294,7 +301,6 @@ public class GameManager {
             }
             @Override
             public void run() {
-
                 while(isRunning) {
                     try{
                         // 데이터 전송 후 대기시간 추가
@@ -320,53 +326,14 @@ public class GameManager {
                         blueCurrent.addAll(redTemp);
                         blueCurrent.addAll(blueTemp);
 
-//                        synchronized (redObjOs) {
-//							try {
-//								 redObjOs.writeObject(new MOD(MODE.PNT_MONSTER_MOD, new Vector<MonsterPosPair>(redCurrent)));
-//								 redObjOs.flush();
-//							}catch (Exception e) {
-//								// TODO: handle exception
-//								e.printStackTrace();
-//							}
-//						}
-//
-//                        synchronized (blueObjOs) {
-//                        	try {
-//								 blueObjOs.writeObject(new MOD(MODE.PNT_MONSTER_MOD, new Vector<MonsterPosPair>(blueCurrent)));
-//								 blueObjOs.flush();
-//							}catch (Exception e) {
-//								// TODO: handle exception
-//								e.printStackTrace();
-//							}
-//						}
-
-
-
-//                        for (int i = 1; i < redCurrent.size(); i++) {
-//                            System.out.print("[" + redCurrent.get(i).monster.getPoint().x + ", " + redCurrent.get(i).monster.getPoint().y + "]  ");
-//                        }
-//                        System.out.println("\n--------");
-
-//                        if (redCurrent.size() >= 30) System.exit(-1);
-
-
                         synchronized (redObjOs) {
                             synchronized (blueObjOs) {
                                 try {
+                                	// 각 클라이언트에게 업데이트된 몬스터들을 그리라고 전송
                                 	redObjOs.reset();
                                 	blueObjOs.reset();
                                     redObjOs.writeObject(new MOD(MODE.PNT_MONSTER_MOD, new Vector<MonsterPosPair>(redCurrent)));
                                     blueObjOs.writeObject(new MOD(MODE.PNT_MONSTER_MOD, new Vector<MonsterPosPair>(blueCurrent)));
-
-                                    // 이 부분 확인해 본 결과 서버에서는 보내주는 몬스터의 위치값이 계속 변경처리가 되고 있는 것 같습니다.
-                                    // GamePanel 부분 ClientReceiver 클래스의 run 부분에서 이를 받고있습니다.
-//                                    for(int i=1;i<redCurrent.size();i++) {
-//            							System.out.println("red point: ["+redCurrent.get(i).monster.getPoint().x+", "+ redCurrent.get(i).monster.getPoint().y+"]");
-//            						}
-//                                    System.out.println("==============================");
-//                                    for(int i=1;i<blueCurrent.size();i++) {
-//            							System.out.println("blue point: ["+blueCurrent.get(i).monster.getPoint().x+", "+ blueCurrent.get(i).monster.getPoint().y+"]");
-//            						}
 
                                     redObjOs.flush();
                                     blueObjOs.flush();
@@ -374,6 +341,7 @@ public class GameManager {
                                     redObjOs.reset();
                                     blueObjOs.reset();
 
+                                    // 생명력이 바뀐 것도 전송
                                     redObjOs.writeObject(new MOD(MODE.MODIFY_LIFE_MOD, red.life));
                                     blueObjOs.writeObject(new MOD(MODE.MODIFY_LIFE_MOD, blue.life));
                                 } catch (Exception e) {

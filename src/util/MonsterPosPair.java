@@ -4,13 +4,16 @@ import Component.Monster;
 
 import java.io.Serializable;
 import java.util.Objects;
-
+/*
+ * Pair 추상 클래스를 상속받는 클래스:
+ * Monster와 idx 저장하는 클래스
+ */
 public class MonsterPosPair extends Pair implements Serializable {
-    public Monster monster; // 위치
+    public Monster monster; // 몬스터 객체
 
     public MonsterPosPair(int idx, Monster monster) {
-        super(idx);
-        this.monster = monster;
+        super(idx); // 인덱스 설정
+        this.monster = monster; // 몬스터 객체 초기화
     }
 
     public MonsterPosPair(MonsterPosPair mpp) {

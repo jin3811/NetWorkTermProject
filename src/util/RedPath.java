@@ -3,10 +3,15 @@ package util;
 import java.awt.Point;
 import java.util.ArrayList;
 import java.util.List;
-
+/*
+ * 싱글톤 클래스:
+ * 레드팀 몬스터의 이동 경로를 정의
+ * 몬스터가 맵에서 이동할 수 있는 네가지 경로를 관리
+ * Path를 상속 받음
+ */
 public class RedPath extends Path {
 	private static RedPath redPath;
-
+	// 생성자: 레드팀 몬스터 이동 경로 초기화
 	private RedPath() {
 		super();
 		Direction1 = new ArrayList<Point>() {

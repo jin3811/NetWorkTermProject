@@ -3,11 +3,15 @@ package util;
 import java.awt.Point;
 import java.util.ArrayList;
 import java.util.List;
-
+/*
+ * 싱글톤 클래스:
+ * 레드팀 포탑 설치 가능한 구역의 목록을 가진다. 
+ * */
 public class RedArea {
 	public static RedArea redArea;
 	List<Point> allPoints = new ArrayList<>();
 	List<Point> area;
+	// 생성자: allPoints 생성 후 이를 이용한 area 설정
 	private RedArea() {
 		for(int i=0;i<1000;i+=50) {
 			for(int j=0;j<1000;j+=50) {
@@ -173,9 +177,10 @@ public class RedArea {
         }
         return redArea;
     }
-	 public List<Point> getRedArea() {
-	        return area;
-	    }
+	// 레드팀 포탑 설치 가능 구역 목록 반환
+	public List<Point> getRedArea() {
+		return area;
+	}
 
 	
 }

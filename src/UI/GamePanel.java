@@ -704,9 +704,6 @@ public class GamePanel extends JPanel {
 							System.out.println(teamColor + ": " + "게임에서 패배하였습니다!");
 							displayEndGameMessage(teamColor + ": " + "게임에서 패배하였습니다..");
 							break;
-						case TEST_MOD:
-							System.out.println(packet.getPayload());
-							break;
 						}
 					}
 				}

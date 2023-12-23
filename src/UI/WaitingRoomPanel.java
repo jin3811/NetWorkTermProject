@@ -31,8 +31,6 @@ public class WaitingRoomPanel extends JPanel {
 	private ObjectInputStream objIs;
 	private ObjectOutputStream objOS;
 
-//	private boolean isReady = false;
-
 	private Thread updateRoomListThread; // 방 리스트를 업데이트하는 스레드
 	private Thread loadingThread; // 플레이어 대기 상태를 표시하는 스레드
 	private Thread gameStartThread; // 게임 시작 카운트다운을 처리하는 스레드
