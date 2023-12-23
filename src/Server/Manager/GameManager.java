@@ -62,7 +62,6 @@ public class GameManager {
     // 플에이어 관리하는 내부 클래스
     public class Player {
         protected UserService user;
-//        protected int gold;
         protected int life;
         protected final List<MonsterPosPair> monsters = new CopyOnWriteArrayList<>();
         protected List<Turret> turrets = new CopyOnWriteArrayList<>();
@@ -70,8 +69,7 @@ public class GameManager {
 
         public Player(UserService user) {
             this.user = user;
-//            this.gold = 500;
-            this.life = 5;
+            this.life = 10;
         }
 
         public void decreaseLife() {
@@ -174,7 +172,7 @@ public class GameManager {
                         // 몬스터가 죽었는지 체크
                         if (target.monster.getHP() <= 0) {
                             monsters.remove(target);
-                            earnedGold += 10; // 얻는 금액: 가정한 금액, 게임 규칙에 따라 조정 필요
+                            earnedGold += 100; // 얻는 금액: 100골드
                         }
                     }
                 }

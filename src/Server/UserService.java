@@ -83,8 +83,6 @@ public class UserService extends Thread implements Serializable{
                         this.server.gameManager.startGame(roomNum);
                     }
                     case TURRET_UPDATE_MOD -> { // 터렛 업데이트 요청 받은 경우
-                        System.out.println("터렛 업뎃 들어옴");
-                        
                         // 일단 상대 UserService를 가져온다.
                         UserService enemy = this.server.userManager.getUserbyId(r.getEnemy(this.id));
 

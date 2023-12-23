@@ -116,8 +116,8 @@ public class GamePanel extends JPanel {
 		this.objIs = objIs;
 		this.roomNum = roomNum; // 방번호
 		this.team = team; // 팀
-		this.gold = 100; // 초기 gold 100
-		this.life = 5; // 초기 life 5
+		this.gold = 200; // 초기 gold 200
+		this.life = 10; // 초기 life 10
 
 		// 각 팀별 포탑 설치 가능 구역, 각 팀별 몬스터 이동 구역, 제한 구역(설치불가) 정보를 가진 싱글톤 객체
 		blueAreaInstance = BlueArea.getInstance();
@@ -335,12 +335,7 @@ public class GamePanel extends JPanel {
 				int tileY = (clickPoint.y / tileSize) * tileSize;
 				Point turretPoint = new Point(tileX, tileY); // turretPoint 지정
 
-				// 해야하는 것: 클라이언트단에서 포탑 설치 및 업그레이드를 한 후 해당 정보를 서버로 전송한다.
-				// 초기 설정: 내가 배정된 팀의 잔디 구역(포탑 구역)에 0레벨 포탑 설치한다(Turret) - 이 경우에는 잔디를 그려준다.
-				// 해당 팀의 잔디 구역(포탑 구역)을 클릭하면 메서드를 이용해서 포탑의 레벨을 올린다(물론 돈이 있고, 최대 레벨이 아니면)
-				// 포탑의 레벨이 1레벨 이상이면 그때부터 내가 배정된 팀의 잔디구역에 포탑 이미지를 그릴 수 있도록 한다.
-				// 그럼 필요한 것:
-				// 클릭한 구역이 내 구역인지 확인 && 몬스터 통로 구역이 아님을 확인 && 설치 불가 구역이 아님을 확인
+			
 
 				// 터렛 설치 가능 구역인지 확인(내 구역인지, 몬스터 통로 아닌지, 제한 구역 아닌지)
 				if (isValidTurretPlacement(turretPoint, team)) {
@@ -442,9 +437,9 @@ public class GamePanel extends JPanel {
 				return true;
 			}
 			return false;
-		} else if (level == 2) { // 2렙이면 500골드 차감
-			if (gold >= 500) {
-				gold -= 500;
+		} else if (level == 2) { // 2렙이면 400골드 차감
+			if (gold >= 400) {
+				gold -= 400;
 				return true;
 			}
 			return false;
@@ -696,12 +691,10 @@ public class GamePanel extends JPanel {
 							break;
 						case GAME_WIN_MOD: // 이겼을 때
 							teamColor = (team == TEAM.RED) ? "레드팀" : "블루팀";
-							System.out.println(teamColor + ": " + "게임에서 승리하였습니다!");
 							displayEndGameMessage(teamColor + ": " + "게임에서 승리하였습니다!");
 							break;
 						case GAME_LOSE_MOD: // 졌을 때
 							teamColor = (team == TEAM.RED) ? "레드팀" : "블루팀";
-							System.out.println(teamColor + ": " + "게임에서 패배하였습니다!");
 							displayEndGameMessage(teamColor + ": " + "게임에서 패배하였습니다..");
 							break;
 						}

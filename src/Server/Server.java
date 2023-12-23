@@ -75,16 +75,12 @@ public class Server {
                     UserService user = new UserService(Server.this, clientSocket, id++);
                     userManager.addUser(user); // userManager에 추가
                     user.start(); // 스레드 시작
-                    System.out.println("유저 서비스 시작");
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
         }
     }
-
-
-
 }
 
 

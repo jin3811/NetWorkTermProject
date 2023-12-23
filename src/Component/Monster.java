@@ -14,7 +14,7 @@ public class Monster implements Serializable {
 
 	// 생성자: 위치 입력받아 새 몬스터 객체 생성
 	public Monster(Point point) {
-		this.HP = 100;
+		this.HP = 24;
 		this.point = point;
 	}
 	// 복사 생성자: 기존 몬스터 객체 복사 새 몬스터 생성

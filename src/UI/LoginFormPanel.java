@@ -91,19 +91,18 @@ public class LoginFormPanel extends JPanel {
 
     // 입력한 ip가 localhost, 또는 ipv4 형식에 맞게 입력되었는지 확인
     private boolean isIpFormat(String ip) {
-        return true;
+        return ip.matches("localhost|((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)");
     }
 
     // 입력한 port가 범위에 맞게 입력되었는지 확인
     private boolean isPortFormat(String port) {
-//        try {
-//            int portTest = Integer.parseInt(port);
-//            return portTest >= 0 && portTest <= 65535;
-//        }
-//        catch (NumberFormatException e) {
-//            return false;
-//        }
-    	return true;
+        try {
+            int portTest = Integer.parseInt(port);
+            return portTest >= 0 && portTest <= 65535;
+        }
+        catch (NumberFormatException e) {
+            return false;
+        }
     }
     // 모든 요소들을 추가
     private void setDisplay() {
@@ -123,7 +122,7 @@ public class LoginFormPanel extends JPanel {
     private void connectToServer(String ip, String port, String nickname) {
         try {
         	// 받아온 ip, port로 소켓 연결
-            socket = new Socket("localhost", 9999);//Integer.parseInt(port));
+            socket = new Socket("localhost", Integer.parseInt(port));
         } catch (Exception e) {
             e.printStackTrace();
         }

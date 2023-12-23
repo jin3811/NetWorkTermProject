@@ -22,7 +22,7 @@ public class Turret implements Serializable {
 		this.point = point;
 		this.team = team;
 		this.level = 0;
-		this.atkPower = 50;
+		this.atkPower = 0;
 	}
 	
 	// getter 메소드들
@@ -47,11 +47,21 @@ public class Turret implements Serializable {
 		target.setHP(target.HP - atkPower);
 	}
 
-	// 포탑 업그레이드 메소드: 포탑 레벨 1증가, 공격력 증가
+	// 포탑 업그레이드 메소드: 포탑 레벨 1증가, 레벨에 따른 공격력 설정
 	public void upgrade() {
 		if (level < MAX_LEVEL) {
-			level++;
-			atkPower += 10;
+			 level++;
+		        switch (level) {
+		            case 1:
+		                atkPower = 6;
+		                break;
+		            case 2:
+		                atkPower = 8;
+		                break;
+		            case 3:
+		                atkPower = 12;
+		                break;
+		        }
 		}
 	}
 
